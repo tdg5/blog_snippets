@@ -4,6 +4,7 @@ Gemfile.lock
 *.rbc
 /.config
 /coverage/
+/html/
 /InstalledFiles
 /pkg/
 /spec/reports/
