@@ -3,13 +3,15 @@ require 'blog_snippets/attr_optimizations'
 
 describe BlogSnippets::AttrOptimizations do
 
-  ITERATIONS = 10_000_000
+  before(:all) do
+    @iterations = 10_000_000
+  end
 
   context 'read/write attribute' do
     it 'is faster to use attr_accessor' do
       minimalist = BlogSnippets::AttrOptimizations::MinimalistAttrs.new
       minimalist_result = speed_test do
-        ITERATIONS.times do |i|
+        @iterations.times do |i|
           minimalist.accessor = i
           minimalist.accessor
         end
@@ -19,7 +21,7 @@ describe BlogSnippets::AttrOptimizations do
 
       excessive = BlogSnippets::AttrOptimizations::ExcessiveAttrs.new
       excessive_result = speed_test do
-        ITERATIONS.times do |i|
+        @iterations.times do |i|
           excessive.accessor = i
           excessive.accessor
         end
@@ -34,7 +36,7 @@ describe BlogSnippets::AttrOptimizations do
       minimalist = BlogSnippets::AttrOptimizations::MinimalistAttrs.new
       minimalist.instance_variable_set(:@reader, 1)
       minimalist_result = speed_test do
-        ITERATIONS.times do |i|
+        @iterations.times do |i|
           minimalist.reader
         end
       end
@@ -44,7 +46,7 @@ describe BlogSnippets::AttrOptimizations do
       excessive = BlogSnippets::AttrOptimizations::ExcessiveAttrs.new
       excessive.instance_variable_set(:@reader, 1)
       excessive_result = speed_test do
-        ITERATIONS.times do |i|
+        @iterations.times do |i|
           excessive.reader
         end
       end
@@ -57,7 +59,7 @@ describe BlogSnippets::AttrOptimizations do
     it 'is faster to use attr_writer' do
       minimalist = BlogSnippets::AttrOptimizations::MinimalistAttrs.new
       minimalist_result = speed_test do
-        ITERATIONS.times do |i|
+        @iterations.times do |i|
           minimalist.writer = i
           minimalist.writer = nil
         end
@@ -67,7 +69,7 @@ describe BlogSnippets::AttrOptimizations do
 
       excessive = BlogSnippets::AttrOptimizations::ExcessiveAttrs.new
       excessive_result = speed_test do
-        ITERATIONS.times do |i|
+        @iterations.times do |i|
           excessive.writer = i
           excessive.writer = nil
         end
