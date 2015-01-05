@@ -159,7 +159,7 @@ do
 done
 ```
 
-[View on GitHub](about:blank)
+[View on GitHub](https://github.com/tdg5/blog_snippets/blob/ecd2f5787de53dd2fa576c34caa7b3a6573ddf83/lib/blog_snippets/tuning_dd_block_size/dd_obs_test.sh)
 
 As you can see, the script is a pretty basic for-loop that uses dd to create a
 test file of 128MB using a variety of block sizes, from the default of 512
@@ -242,7 +242,7 @@ done
 rm $TEST_FILE
 ```
 
-[View on GitHub](about:blank)
+[View on GitHub](https://github.com/tdg5/blog_snippets/blob/d1d3b532578ee02fca0a7cc389ff3eba94ba4ebf/lib/blog_snippets/tuning_dd_block_size/dd_ibs_test.sh)
 
 Similar to the *dd_obs_test.sh* script, this script will create a default test
 file named *dd_ibs_testfile* but you you can also provide the script with a path
