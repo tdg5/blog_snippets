@@ -124,47 +124,62 @@ default block size of 512 bytes tends to be horribly inefficient. That said,
 though not always the most optimal, the Eug-Lug suggested block size of 64K can
 be a somewhat reliable option for a more modern default.
 
-## A script to find a more optimal block size
-Because of the wild variance in optimal block sizing, I've written a script to
-test a range of different block size options for use prior to starting any large
-copies with dd. However, before we discuss the script, **be warned that this
-script uses dd behind the scenes, so it's important to use caution when running
-the script so as to avoid summoning dd's alter ego, disk destroyer.**[^3] That
-said, here's the script:
+## A pair of scripts to find more optimal block sizes
+Because of the wild variance in optimal block sizing, I've written a couple of
+scripts to test a range of different input and output block size options for use
+prior to starting any large copies with dd. However, before we discuss the
+scripts, **be warned that this both scripts use dd behind the scenes, so it's
+important to use caution when running either script so as to avoid summoning
+dd's alter ego, disk destroyer.**[^3] The scripts are short enough that I
+encourage you to read both scripts before using either one of them so you have a
+better understanding of what is going on behind the scenes.  That said, first
+we'll look at a script for determining an optimal output block size.
+
+### dd_obs_test.sh
+
+Let's just jump straight into the script:
 
 ```bash
 #!/bin/bash
 
+TEST_FILE=${1:-dd_obs_testfile}
 TEST_FILE_SIZE=128M
 
-for BS in 512 1K 2K 4K 8K 16K 32K 64K 128K 256K 512K 1M 2M 4M 8M 16M 32M 64M
+for block_size in 512 1K 2K 4K 8K 16K 32K 64K 128K 256K 512K 1M 2M 4M 8M 16M 32M 64M
 do
-  TEST_FILE=${1:-dd_bs_testfile}
-  result=$(dd if=/dev/zero of=$TEST_FILE iflag=count_bytes bs=$BS count=$TEST_FILE_SIZE 2>&1 1>/dev/null | grep --only-matching -E '[0-9.]+ [MGk]?B/s')
+  # Create a test file with the specified block size
+  dd_result=$(dd if=/dev/zero of=$TEST_FILE iflag=count_bytes bs=$block_size count=$TEST_FILE_SIZE 2>&1 1>/dev/null)
+
+  # Extract the transfer rate from dd's STDERR output
+  transfer_rate=$(echo $dd_result | \grep --only-matching -E '[0-9.]+ [MGk]?B/s')
+
+  # Clean up the test file and output result
   rm $TEST_FILE
-  echo "$BS: $result"
+  echo "$block_size: $transfer_rate"
 done
 ```
 
-As you can see, the script is a pretty basic for loop that uses dd to create a
+[View on GitHub](about:blank)
+
+As you can see, the script is a pretty basic for-loop that uses dd to create a
 test file of 128MB using a variety of block sizes, from the default of 512
 bytes, all the way up to 64M. There are a few extra arguments to the dd command
 to make writing out a 128M file easy and there's also some grepping to pull out
 the transfer rate, but otherwise, that's pretty much all there is to it.
 
-By default the command will create a test file named *dd_bs_testfile* in the
-current directory.  Alternatively, you can provide a path to a custom test file
+By default the command will create a test file named *dd_obs_testfile* in the
+current directory. Alternatively, you can provide a path to a custom test file
 by providing a path after the script name:
 
 ```bash
-$ ./dd_bs_test.sh /path/to/disk/test_file
+$ ./dd_obs_test.sh /path/to/disk/or/test_file
 ```
 
 The output of the script is a list of the tested block sizes and their respective transfer
 rates like so:
 
 ```bash
-$ ./dd_test.sh /dev/null
+$ ./dd_obs_test.sh /dev/null
 512: 1.4 GB/s
 1K: 2.6 GB/s
 2K: 4.3 GB/s
@@ -187,6 +202,89 @@ $ ./dd_test.sh /dev/null
 
 Wow, I guess [*/dev/null* really is
 web-scale.](https://www.youtube.com/watch?v=b2F-DItXtZs&t=1m42s)
+
+### dd_ibs_test.sh
+Now let's look at a similar script for determining an optimal input block size.
+We can follow pretty much the same pattern expect for a couple of key
+differences: instead of reading from */dev/zero* and writing out the test
+file, this script reads from */dev/urandom* to create a test file of random bits
+and then uses dd to copy that test file to */dev/null* using a variety of
+different block sizes. Since this script creates the test file at the path you
+specify, you will want to be careful not to accidentally overwrite an existing
+file by pointing the script at an existing path.
+
+Here's the script:
+
+```bash
+#!/bin/bash
+
+TEST_FILE=${1:-dd_ibs_testfile}
+TEST_FILE_SIZE=128M
+
+# Exit if file exists
+[ -e $TEST_FILE ] && exit 1
+
+# Create test file
+dd if=/dev/urandom of=$TEST_FILE iflag=count_bytes bs=64K count=$TEST_FILE_SIZE > /dev/null 2>&1
+
+for block_size in 512 1K 2K 4K 8K 16K 32K 64K 128K 256K 512K 1M 2M 4M 8M 16M 32M 64M
+do
+  # Read test file out to /dev/null with specified block size
+  dd_result=$(dd if=$TEST_FILE of=/dev/null iflag=count_bytes bs=$block_size count=$TEST_FILE_SIZE 2>&1 1>/dev/null)
+
+  # Extract transfer rate
+  transfer_rate=$(echo $dd_result | \grep --only-matching -E '[0-9.]+ [MGk]?B/s')
+
+  echo "$block_size: $transfer_rate"
+done
+
+# Clean up
+rm $TEST_FILE
+```
+
+[View on GitHub](about:blank)
+
+Similar to the *dd_obs_test.sh* script, this script will create a default test
+file named *dd_ibs_testfile* but you you can also provide the script with a path
+argument to test input block sizes on different devices:
+
+```bash
+$ ./dd_ibs_test.sh /path/to/disk/test_file
+```
+
+Again, it is important to remember that the script will try to overwrite the
+test file and later will remove the file after it has been written, so use
+extreme caution to avoid blowing away something you didn't mean to destroy. It
+is likely that you will need to tweak this script to meet your particular use
+case.
+
+Also like *dd_obs_test.sh*, the output of this script is a list of the tested
+block sizes and their respective transfer rates like so:
+
+```bash
+$ ./dd_ibs_test.sh
+512: 1.1 GB/s
+1K: 1.8 GB/s
+2K: 3.0 GB/s
+4K: 4.2 GB/s
+8K: 5.1 GB/s
+16K: 5.7 GB/s
+32K: 5.4 GB/s
+64K: 5.8 GB/s
+128K: 6.3 GB/s
+256K: 5.4 GB/s
+512K: 5.8 GB/s
+1M: 5.8 GB/s
+2M: 5.3 GB/s
+4M: 5.0 GB/s
+8M: 4.9 GB/s
+16M: 4.5 GB/s
+32M: 4.4 GB/s
+64M: 3.5 GB/s
+```
+
+In the above example it can be seen that an input block size of 128K is optimal
+for my particular setup.
 
 ## The end
 I hope this post has given you some insight into tuning dd's block size
