@@ -1,0 +1,52 @@
+== disasm: <RubyVM::InstructionSequence:<compiled>@<compiled>>==========
+0000 putspecialobject 3                                               (   1)
+0002 putnil
+0003 defineclass      :BlogSnippets, <module:BlogSnippets>, 2
+0007 leave
+== disasm: <RubyVM::InstructionSequence:<module:BlogSnippets>@<compiled>>
+0000 putspecialobject 3                                               (   2)
+0002 putnil
+0003 defineclass      :TCOFib, <module:TCOFib>, 2
+0007 leave
+== disasm: <RubyVM::InstructionSequence:<module:TCOFib>@<compiled>>=====
+0000 putspecialobject 1                                               (   3)
+0002 putself
+0003 putobject        :acc
+0005 putiseq          acc
+0007 opt_send_simple  <callinfo!mid:core#define_singleton_method, argc:3, ARGS_SKIP>
+0009 pop
+0010 putspecialobject 1                                               (  11)
+0012 putself
+0013 putobject        :fib
+0015 putiseq          fib
+0017 opt_send_simple  <callinfo!mid:core#define_singleton_method, argc:3, TAILCALL|ARGS_SKIP>
+0019 leave
+== disasm: <RubyVM::InstructionSequence:acc@<compiled>>=================
+local table (size: 4, argc: 3 [opts: 0, rest: -1, post: 0, block: -1, keyword: 0@5] s1)
+[ 4] i<Arg>     [ 3] n<Arg>     [ 2] result<Arg>
+0000 getlocal_OP__WC__0 4                                             (   4)
+0002 putobject        -1
+0004 opt_eq           <callinfo!mid:==, argc:1, ARGS_SKIP>
+0006 branchunless     12
+0008 getlocal_OP__WC__0 2                                             (   5)
+0010 leave                                                            (   4)
+0011 pop
+0012 putself                                                          (   7)
+0013 getlocal_OP__WC__0 4
+0015 putobject_OP_INT2FIX_O_1_C_
+0016 opt_minus        <callinfo!mid:-, argc:1, ARGS_SKIP>
+0018 getlocal_OP__WC__0 3
+0020 getlocal_OP__WC__0 2
+0022 opt_plus         <callinfo!mid:+, argc:1, ARGS_SKIP>
+0024 getlocal_OP__WC__0 3
+0026 opt_send_simple  <callinfo!mid:acc, argc:3, FCALL|TAILCALL|ARGS_SKIP>
+0028 leave
+== disasm: <RubyVM::InstructionSequence:fib@<compiled>>=================
+local table (size: 2, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, keyword: 0@3] s1)
+[ 2] i<Arg>
+0000 putself                                                          (  12)
+0001 getlocal_OP__WC__0 2
+0003 putobject_OP_INT2FIX_O_1_C_
+0004 putobject_OP_INT2FIX_O_0_C_
+0005 opt_send_simple  <callinfo!mid:acc, argc:3, FCALL|TAILCALL|ARGS_SKIP>
+0007 leave
