@@ -1,5 +1,5 @@
 {
-  'Fact' => { :tailcall_optimization => false, :trace_instruction => true },
+  'Fact' => { :tailcall_optimization => false, :trace_instruction => false },
   'TCOFact' => { :tailcall_optimization => true, :trace_instruction => false },
 }.each do |class_name, compile_options|
   RubyVM::InstructionSequence.compile_option = compile_options

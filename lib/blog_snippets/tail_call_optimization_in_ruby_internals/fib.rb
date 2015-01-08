@@ -1,5 +1,5 @@
 {
-  'Fib' => { :tailcall_optimization => false, :trace_instruction => true },
+  'Fib' => { :tailcall_optimization => false, :trace_instruction => false },
   'TCOFib' => { :tailcall_optimization => true, :trace_instruction => false },
 }.each do |class_name, compile_options|
   RubyVM::InstructionSequence.compile_option = compile_options
