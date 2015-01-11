@@ -4,6 +4,7 @@ require 'pry'
 module BlogSnippets
   module Renderers
     class WordpressHTMLRenderer < Redcarpet::Render::HTML
+      INDENTATION_TOKEN = '__WORDPRESS_HTML_RENDERER_INDENTATION__'
       NEW_LINE_TOKEN = '__WORDPRESS_HTML_RENDERER_NEW_LINE__'
 
       def initialize(options = nil)
@@ -14,6 +15,7 @@ module BlogSnippets
       def block_code(code, language)
         # Replace line breaks with new-line token
         code.gsub!(/\n/, NEW_LINE_TOKEN)
+        code.gsub!(/  /, INDENTATION_TOKEN)
         # Can't call super due to C-extension design, so fake it.
         "[code language=\"#{language}\"]#{code}[/code]\n"
       end
@@ -26,6 +28,7 @@ module BlogSnippets
         document.gsub!(/(?<=[^\s])\s{2,}/, ' ')
         # Replace tokens with desired characters
         document.gsub!(/#{NEW_LINE_TOKEN}/, "\n")
+        document.gsub!(/#{INDENTATION_TOKEN}/, '  ')
         document
       end
 
