@@ -1,30 +1,19 @@
-{
-  'Fact' => { :tailcall_optimization => false, :trace_instruction => false },
-  'TCOFact' => { :tailcall_optimization => true, :trace_instruction => false },
-}.each do |class_name, compile_options|
-  RubyVM::InstructionSequence.compile_option = compile_options
-  code = <<-CODE
-    module BlogSnippets
-      module #{class_name}
-        def self.fact_call(n, accumulator)
-          if n == 1
-            accumulator
-          else
-            fact_call(n - 1, n * accumulator)
-          end
-        end
-
-        def self.factorialize(n)
-          fact_call(n, 1)
-        end
-      end
+code = <<-CODE
+  class Factorial
+    def self.fact_helper(n, res)
+      n == 1 ? res : fact_helper(n - 1, n * res)
     end
-  CODE
-  instruction_sequence = RubyVM::InstructionSequence.new(code)
 
-  puts "#{class_name}:\n#{instruction_sequence.disasm}"
-  instruction_sequence.eval
+    def self.fact(n)
+      fact_helper(n, 1)
+    end
+  end
+CODE
+
+{
+  'normal' => { :tailcall_optimization => false, :trace_instruction => false },
+  'tail call optimized' => { :tailcall_optimization => true, :trace_instruction => false },
+}.each do |identifier, compile_options|
+  instruction_sequence = RubyVM::InstructionSequence.new(code, nil, nil, nil, compile_options)
+  puts "#{identifier}:\n#{instruction_sequence.disasm}"
 end
-
-# Reset compile options
-RubyVM::InstructionSequence.compile_option = { :tailcall_optimization => false, :trace_instruction => true }
