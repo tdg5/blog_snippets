@@ -1,50 +1,45 @@
 == disasm: <RubyVM::InstructionSequence:<compiled>@<compiled>>==========
 0000 putspecialobject 3                                               (   1)
 0002 putnil
-0003 defineclass      :BlogSnippets, <module:BlogSnippets>, 2
+0003 defineclass      :Factorial, <class:Factorial>, 0
 0007 leave
-== disasm: <RubyVM::InstructionSequence:<module:BlogSnippets>@<compiled>>
-0000 putspecialobject 3                                               (   2)
-0002 putnil
-0003 defineclass      :Fact, <module:Fact>, 2
-0007 leave
-== disasm: <RubyVM::InstructionSequence:<module:Fact>@<compiled>>=======
-0000 putspecialobject 1                                               (   3)
+== disasm: <RubyVM::InstructionSequence:<class:Factorial>@<compiled>>===
+0000 putspecialobject 1                                               (   2)
 0002 putself
-0003 putobject        :fact_call
-0005 putiseq          fact_call
-0007 opt_send_simple  <callinfo!mid:core#define_singleton_method, argc:3, ARGS_SKIP>
+0003 putobject        :fact_helper
+0005 putiseq          fact_helper
+0007 opt_send_without_block <callinfo!mid:core#define_singleton_method, argc:3, ARGS_SIMPLE>
 0009 pop
-0010 putspecialobject 1                                               (  11)
+0010 putspecialobject 1                                               (   6)
 0012 putself
-0013 putobject        :factorialize
-0015 putiseq          factorialize
-0017 opt_send_simple  <callinfo!mid:core#define_singleton_method, argc:3, ARGS_SKIP>
+0013 putobject        :fact
+0015 putiseq          fact
+0017 opt_send_without_block <callinfo!mid:core#define_singleton_method, argc:3, ARGS_SIMPLE>
 0019 leave
-== disasm: <RubyVM::InstructionSequence:fact_call@<compiled>>===========
-local table (size: 3, argc: 2 [opts: 0, rest: -1, post: 0, block: -1, keyword: 0@4] s1)
-[ 3] n<Arg>     [ 2] accumulator<Arg>
-0000 getlocal_OP__WC__0 3                                             (   4)
+== disasm: <RubyVM::InstructionSequence:fact_helper@<compiled>>=========
+local table (size: 3, argc: 2 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 3] n<Arg>     [ 2] res<Arg>
+0000 getlocal_OP__WC__0 3                                             (   3)
 0002 putobject_OP_INT2FIX_O_1_C_
-0003 opt_eq           <callinfo!mid:==, argc:1, ARGS_SKIP>
+0003 opt_eq           <callinfo!mid:==, argc:1, ARGS_SIMPLE>
 0005 branchunless     11
-0007 getlocal_OP__WC__0 2                                             (   5)
-0009 leave                                                            (   4)
+0007 getlocal_OP__WC__0 2
+0009 leave
 0010 pop
-0011 putself                                                          (   7)
+0011 putself
 0012 getlocal_OP__WC__0 3
 0014 putobject_OP_INT2FIX_O_1_C_
-0015 opt_minus        <callinfo!mid:-, argc:1, ARGS_SKIP>
+0015 opt_minus        <callinfo!mid:-, argc:1, ARGS_SIMPLE>
 0017 getlocal_OP__WC__0 3
 0019 getlocal_OP__WC__0 2
-0021 opt_mult         <callinfo!mid:*, argc:1, ARGS_SKIP>
-0023 opt_send_simple  <callinfo!mid:fact_call, argc:2, FCALL|ARGS_SKIP>
+0021 opt_mult         <callinfo!mid:*, argc:1, ARGS_SIMPLE>
+0023 opt_send_without_block <callinfo!mid:fact_helper, argc:2, FCALL|ARGS_SIMPLE>
 0025 leave
-== disasm: <RubyVM::InstructionSequence:factorialize@<compiled>>========
-local table (size: 2, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, keyword: 0@3] s1)
+== disasm: <RubyVM::InstructionSequence:fact@<compiled>>================
+local table (size: 2, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
 [ 2] n<Arg>
-0000 putself                                                          (  12)
+0000 putself                                                          (   7)
 0001 getlocal_OP__WC__0 2
 0003 putobject_OP_INT2FIX_O_1_C_
-0004 opt_send_simple  <callinfo!mid:fact_call, argc:2, FCALL|ARGS_SKIP>
+0004 opt_send_without_block <callinfo!mid:fact_helper, argc:2, FCALL|ARGS_SIMPLE>
 0006 leave
