@@ -17,7 +17,7 @@ module BlogSnippets
         code.gsub!(/\n/, NEW_LINE_TOKEN)
         code.gsub!(/  /, INDENTATION_TOKEN)
         # Can't call super due to C-extension design, so fake it.
-        "[code language=\"#{language}\"]#{code}[/code]\n"
+        "[code language=\"#{language}\"]#{NEW_LINE_TOKEN}#{code}[/code]\n"
       end
 
       def postprocess(document)
