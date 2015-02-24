@@ -1,0 +1,66 @@
+Coercion to Boolean compared to lazy evaluation counterpart
+    > false | :WTF?
+      => true
+    > true & :WTF?
+      => true
+  Even with very large object on RHS, no efficiency gained by coercion
+    Because of method call implementation?
+  Other than tricky coercion, only gain is that it is ever so slightly faster
+  than double negation:
+    require 'benchmark/ips'
+
+    Benchmark.ips do |bm|
+      bm.report("Double negate") { !!(true && :a) }
+
+      bm.report("Logical bit-wise coerce") { true & :a }
+    end
+
+    # Calculating --------------------------------------------
+    #   Double negate                         138.008k i/100ms
+    #   Logical bit-wise coerce               139.350k i/100ms
+    # --------------------------------------------------------
+    #   Double negate            7.262M (± 1.0%) i/s - 36.434M
+    #   Logical bit-wise coerce  7.825M (± 1.3%) i/s - 39.157M
+    # --------------------------------------------------------
+
+
+
+"Maybe use when you have very simple boolean expressions and the cost
+of short cutting (i.e. a branch) is greater than the time you save by
+not evaluating the later expressions."
+  http://stackoverflow.com/a/7105382/1169710
+    Secretly method calls in Ruby!
+    Doesn't seem to apply in Ruby. Branching always cheaper than a method call.
+
+
+Operator precedence:
+  > true || 1 && 3
+    => true
+  > true || (1 && 3)
+    => true
+
+  > true | 1 && 3
+    => 3
+  > (true | 1) && 3
+    => 3
+
+
+  > false && true ^ true
+    => false
+  > false && (true ^ true)
+    => false
+
+  > false & true ^ true
+    => true
+  > (false && true) ^ true
+    => true
+
+Seems like they'd mostly be used for their side effects which is bad
+
+Only works consistently for falsy values and true. Truthy values explosive!
+
+Examples:
+  https://github.com/ruby/ruby/blob/75feee0968c9345e7ffd2bda9835fcd60b4c0880/benchmark/bm_so_k_nucleotide.rb#L40
+  https://github.com/rubyspec/rubyspec/blob/38b775a32293ce7ec5bdadaa7e70422fb5dc3a68/core/string/slice_spec.rb#L436
+  https://github.com/rubyspec/rubyspec/blob/38b775a32293ce7ec5bdadaa7e70422fb5dc3a68/core/string/shared/slice.rb#L419
+  https://github.com/rubyspec/rubyspec/blob/324c37bb67ea51f197954a37a2c71878eeadea01/core/string/plus_spec.rb#L41
