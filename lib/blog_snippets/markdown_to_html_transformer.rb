@@ -22,6 +22,7 @@ module BlogSnippets
         :footnotes => true,
         :no_intra_emphasis => true,
         :space_after_headers => true,
+        :tables => true,
       }
     end
 
