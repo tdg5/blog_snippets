@@ -145,6 +145,26 @@ I haven't tried to do much research on this particular type of problem yet, but
 I'm excited to revisit this search function at some point in the future and see
 what other ideas are out there for me to throw at the problem.
 
+**Update:** After discussing the peculiarities of this approach with my coworker
+Matt Bittarelli, he suggested a couple of alternatives to the binary search
+approach that seemed intriguing and simpler. The first idea was simply to [force
+a **SystemStackError** and check the length of the exception's backtrace from the
+**rescue** context to determine the maximum stack
+depth](https://github.com/tdg5/tco_method/commit/e2e7f30314fd3d0e1b2d138328d7deeb31e7bd96).
+Though this approach works in Ruby 2.2, [it does not work in Ruby 2.0 or Ruby
+2.1](https://travis-ci.org/tdg5/tco_method/builds/54811953). The other idea Matt
+had was that maybe a **SystemStackError** wasn't necessary at all if a block
+could be used to monitor how the stack depth changed from iteration to
+iteration. Though a little mind bending, I was able to [use a recursive method
+that yields to a block to monitor how the stack depth changes and using that
+information determine whether the method had been compiled with tail call
+optimization enabled](https://github.com/tdg5/tco_method/commit/c2963276376f7705b2fb1b6b582d88f07954c02f).
+Though the means of determining if a method is compiled with tail call
+optimization has changed since I initially wrote this article, I think all three
+of the above approaches are interesting and I expect more interesting problems
+will emerge as work on this gem continues. Thanks again to Matt Bittarelli for
+his insights into the problem!
+
 ## Test drive
 
 Because tail recursive functions can typically be restated in other ways that
