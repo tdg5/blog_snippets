@@ -7,6 +7,7 @@ Rake::TestTask.new do |t|
 end
 
 task :generate_html, [:source_path] do |tsk, arguments|
+  require "redcarpet"
   require "blog_snippets/renderers/wordpress_html_renderer"
   require "blog_snippets/markdown_to_html_transformer"
 
@@ -15,8 +16,11 @@ task :generate_html, [:source_path] do |tsk, arguments|
   raise "#{source_path} does not exist!" unless File.exist?(source_path)
   raw_source = File.open(source_path, "r") { |f| f.read }
   renderer = BlogSnippets::Renderers::WordpressHTMLRenderer.new
-  converter = BlogSnippets::MarkdownToHTMLTransformer.new(:renderer => renderer)
-  html = converter.transform(raw_source)
+  transformer = BlogSnippets::MarkdownToHTMLTransformer.new({
+    :parser_class => Redcarpet::Markdown,
+    :renderer => renderer
+  })
+  html = transformer.transform(raw_source)
   puts "---- BEGIN COPY ----\n#{html}\n---- END COPY ----"
 end
 

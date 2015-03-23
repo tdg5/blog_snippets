@@ -1,9 +1,33 @@
 module BlogSnippets
   class MarkdownToHTMLTransformer
 
+    DEFAULT_MARKDOWN_EXTENSIONS = {
+      :autolink => true,
+      :disable_indented_code_blocks => true,
+      :fenced_code_blocks => true,
+      :footnotes => true,
+      :no_intra_emphasis => true,
+      :space_after_headers => true,
+      :tables => true,
+    }
+
+    attr_reader :markdown_extensions, :renderer
+
+    def self.default_markdown_extensions
+      const_get(:DEFAULT_MARKDOWN_EXTENSIONS).dup
+    end
+
     def initialize(options = {})
+      raise ArgumentError, ":renderer is required!" unless options[:renderer]
+      raise ArgumentError, ":parser_class is required!" unless options[:parser_class]
+
       @renderer = options[:renderer]
+      @parser_class = options[:parser_class]
       @markdown_extensions = options[:markdown_extensions] || default_markdown_extensions
+    end
+
+    def parser
+      @parser ||= parser_class.new(renderer, @markdown_extensions)
     end
 
     def transform(markdown)
@@ -12,22 +36,10 @@ module BlogSnippets
 
     private
 
-    attr_reader :renderer
+    attr_reader :parser_class
 
     def default_markdown_extensions
-      {
-        :autolink => true,
-        :disable_indented_code_blocks => true,
-        :fenced_code_blocks => true,
-        :footnotes => true,
-        :no_intra_emphasis => true,
-        :space_after_headers => true,
-        :tables => true,
-      }
-    end
-
-    def parser
-      @parser ||= Redcarpet::Markdown.new(renderer, @markdown_extensions)
+      self.class.default_markdown_extensions
     end
   end
 end
