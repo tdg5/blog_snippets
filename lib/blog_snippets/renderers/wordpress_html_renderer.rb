@@ -1,15 +1,14 @@
-require 'redcarpet'
+require "redcarpet"
 require "json"
 
 module BlogSnippets
   module Renderers
     class WordpressHTMLRenderer < Redcarpet::Render::HTML
-      INDENTATION_TOKEN = '__WORDPRESS_HTML_RENDERER_INDENTATION__'
-      NEW_LINE_TOKEN = '__WORDPRESS_HTML_RENDERER_NEW_LINE__'
+      INDENTATION_TOKEN = "__WORDPRESS_HTML_RENDERER_INDENTATION__".freeze
+      NEW_LINE_TOKEN = "__WORDPRESS_HTML_RENDERER_NEW_LINE__".freeze
 
       def initialize(options = nil)
-        options ||= default_options
-        super(options)
+        super(options ||= default_options)
       end
 
       def block_code(code, language_or_attributes)
@@ -32,13 +31,13 @@ module BlogSnippets
 
       def postprocess(document)
         # Remove line breaks; HTML should handle breaking lines
-        document.gsub!(/\n/, ' ')
+        document.gsub!(/\n/, " ")
         # Removing line breaks may have introduced white space runs; zap 'em.
         # http://rubular.com/r/aaVCG1Wlep
-        document.gsub!(/(?<=[^\s])\s{2,}/, ' ')
+        document.gsub!(/(?<=[^\s])\s{2,}/, " ")
         # Replace tokens with desired characters
         document.gsub!(/#{NEW_LINE_TOKEN}/, "\n")
-        document.gsub!(/#{INDENTATION_TOKEN}/, '  ')
+        document.gsub!(/#{INDENTATION_TOKEN}/, "  ")
         document
       end
 
@@ -55,7 +54,7 @@ module BlogSnippets
       def default_options
         {
           :link_attributes => {
-            'target' => '_blank',
+            "target" => "_blank",
           },
           :with_toc_data => true,
         }

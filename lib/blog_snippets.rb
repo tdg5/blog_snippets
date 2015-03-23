@@ -1,4 +1,4 @@
-require 'blog_snippets/version'
+require "blog_snippets/version"
 
 module BlogSnippets
 end

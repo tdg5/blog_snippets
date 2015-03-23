@@ -42,7 +42,7 @@ if ReloadedFactorial.respond_to?(:fact)
   begin
     puts "FirstLoadFactorial: #{FirstLoadFactorial.fact(50000).to_s.length}"
   rescue SystemStackError
-    puts 'FirstLoadFactorial: stack level too deep'
+    puts "FirstLoadFactorial: stack level too deep"
   end
 
   puts "ReloadedFactorial: #{ReloadedFactorial.fact(50000).to_s.length}"
