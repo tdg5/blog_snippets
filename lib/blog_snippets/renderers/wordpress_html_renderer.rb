@@ -1,5 +1,5 @@
 require 'redcarpet'
-require 'pry'
+require "json"
 
 module BlogSnippets
   module Renderers
@@ -12,12 +12,22 @@ module BlogSnippets
         super(options)
       end
 
-      def block_code(code, language)
+      def block_code(code, language_or_attributes)
         # Replace line breaks with new-line token
         code.gsub!(/\n/, NEW_LINE_TOKEN)
         code.gsub!(/  /, INDENTATION_TOKEN)
+
+        # Extract code tag attributes
+        code_attrs = code_attributes(language_or_attributes)
+        code_attrs &&= " #{code_attrs}"
+
         # Can't call super due to C-extension design, so fake it.
-        "[code language=\"#{language}\"]#{NEW_LINE_TOKEN}#{code}[/code]\n"
+        [
+          "[code#{code_attrs}]",
+          NEW_LINE_TOKEN,
+          code,
+          "[/code]\n",
+        ].join
       end
 
       def postprocess(document)
@@ -33,6 +43,14 @@ module BlogSnippets
       end
 
       private
+
+      def code_attributes(lang_or_attrs)
+        return "language=\"#{lang_or_attrs}\"" unless /[, :]/ === lang_or_attrs
+
+        # Curly braces are omitted for some reason, so restore them.
+        attr_json = JSON.parse("{#{lang_or_attrs}}")
+        attr_json.map { |key, value| "#{key}=\"#{value}\"" }.join(" ")
+      end
 
       def default_options
         {
