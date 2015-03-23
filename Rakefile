@@ -1,4 +1,10 @@
 require "bundler/gem_tasks"
+require "rake/testtask"
+
+Rake::TestTask.new do |t|
+  t.libs << "test"
+  t.pattern = "test/**/*_test.rb"
+end
 
 task :generate_html, [:source_path] do |tsk, arguments|
   require "blog_snippets/renderers/wordpress_html_renderer"
@@ -13,3 +19,5 @@ task :generate_html, [:source_path] do |tsk, arguments|
   html = converter.transform(raw_source)
   puts "---- BEGIN COPY ----\n#{html}\n---- END COPY ----"
 end
+
+task :default => :test
