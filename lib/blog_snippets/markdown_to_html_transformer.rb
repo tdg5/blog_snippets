@@ -8,7 +8,9 @@ module BlogSnippets
       :footnotes => true,
       :no_intra_emphasis => true,
       :space_after_headers => true,
+      :strikethrough => true,
       :tables => true,
+      :underline => true,
     }
 
     attr_reader :markdown_extensions, :renderer
