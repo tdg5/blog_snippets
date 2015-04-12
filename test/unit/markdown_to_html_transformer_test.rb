@@ -15,7 +15,9 @@ class MarkdownToHTMLTransformerTest < BlogSnippets::TestCase
         :footnotes => true,
         :no_intra_emphasis => true,
         :space_after_headers => true,
+        :strikethrough => true,
         :tables => true,
+        :underline => true,
       }
       assert_equal expected, subject.default_markdown_extensions
     end
