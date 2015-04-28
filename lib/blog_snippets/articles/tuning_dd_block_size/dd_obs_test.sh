@@ -4,6 +4,7 @@
 set -e
 
 TEST_FILE=${1:-dd_obs_testfile}
+[ -e "$TEST_FILE" ]; TEST_FILE_EXISTS=$?
 TEST_FILE_SIZE=134217728
 
 # Header
@@ -27,7 +28,9 @@ do
   # Extract the transfer rate from dd's STDERR output
   TRANSFER_RATE=$(echo $DD_RESULT | \grep --only-matching -E '[0-9.]+ ([MGk]?B|bytes)/s(ec)?')
 
-  # Clean up the test file and output result
-  rm $TEST_FILE
+  # Clean up the test file if we created one
+  [ $TEST_FILE_EXISTS -ne 0 ] && rm $TEST_FILE
+
+  # Output the result
   printf "$PRINTF_FORMAT" "$BLOCK_SIZE" "$TRANSFER_RATE"
 done
