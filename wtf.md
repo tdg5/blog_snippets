@@ -96,12 +96,14 @@ It was not clear to me when I first began this project, but it seems to me now
 that the family of code I've been focused on finding a home for, the various
 commands and queries, all have something in common. Something more specific than
 that intangible sense that they dwell in some other worldly ether beyond
-the application. The pattern that has gradually emerged to me is that these
-examples are all operational interactions. Unlike most of an application's code
-which tends to focus on how a **user** interacts with the application, these
-types of interactions tend to deal with how an admin, **operator**, or engineer
-operates and administrates your application. Ultimately, the distinction boils
-down to code for operating your application and the ecosystem it exists within, as
+the application.
+
+The pattern that has gradually emerged to me is that these examples are all
+operational interactions. Unlike most of an application's code which tends to
+focus on how a **user** interacts with the application, these types of
+interactions tend to deal with how an admin, **operator**, or engineer operates
+and administrates your application. Ultimately, the distinction boils down to
+code for operating your application and the ecosystem it exists within, as
 opposed to the more common case of code for using your application.
 
 This is not to say that there are not solutions in the Ruby universe for dealing
@@ -204,13 +206,10 @@ changes from **some other shell** to **bash**. Even after the **ls** command is
 executed, the **bash** context persists. It's not until an **exit** command is
 issued that the execution context returns to **some other shell**.
 
-I hope this explanation and example helps clarify the distinction, at least in
-my mind, between a vanilla *command-line interface* and a more interactive
-*command shell*. I know this may seem like a lot of effort to go into just to
-distinguish a *command shell* from a *CLI*, but in the Ruby ecosystem where
-there are numerous tools for building *command-line interfaces* and numerous
-*REPLs*, I've found there's a surprising lack of innovation when it comes to
-*command shells*.
+I know this may seem like a lot of effort to go into just to distinguish a
+*command shell* from a *CLI*, but in the Ruby ecosystem where there are numerous
+tools for building *command-line interfaces* and numerous *REPLs*, I've found
+there's a surprising lack of innovation when it comes to *command shells*.
 
 ## When to use a command shell
 
@@ -237,12 +236,12 @@ return the result or failure of that command (if any) to the user.
 
 Command-line interfaces are no different from other UIs in this regard. However,
 unlike other more graphical UIs, CLIs serve a pretty niche audience, typically
-characterized by IT admins, software professionals, and hackers. There are
-exceptions, of course, but those tend to be scenarios where a CLI is the most
-suitable option, regardless of the sophistication of the target audience. Those
-scenarios tend to be environment or hardware specific, for example situations
-that require low-level interaction with remote machines or on some types of
-hardware with limited graphical capabilities.
+characterized by IT admins, software professionals, and the hacker cliche. There
+are exceptions, of course, but those tend to be scenarios where a CLI is the
+most suitable option, regardless of the sophistication of the target audience.
+Those scenarios tend to be environment or hardware specific, for example
+situations that require low-level interaction with remote machines or on some
+types of hardware with limited graphical capabilities.
 
 If you're reading this article, chances are that your target environment offers
 few options beyond a CLI or your audience is sufficiently sophisticated that
