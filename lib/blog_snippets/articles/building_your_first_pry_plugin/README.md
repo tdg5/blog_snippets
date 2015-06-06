@@ -3,17 +3,18 @@ and the alternative Ruby
 [CLI](https://en.wikipedia.org/wiki/Command-line_interface) /
 [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)
 experience it provides, I have to admit, I didn't get it. I didn't understand
-why `pry` was a better option than `irb` or more typically for me, `rails
-console`. Sure, helpful commands built into pry like `ls` make for a nicer CLI
-experience, but you could already get similar information by evaluating a
-snippet along the lines of `target.methods.sort - Object.methods`, and what's
-not nice about typing that 10x a day?
+why `pry` was a better option than
+[irb](https://en.wikipedia.org/wiki/Interactive_Ruby_Shell) or more typically
+for me, `rails console`. Sure, pry's built-in commands like `ls` make for a
+nicer CLI experience, but one could already get similar information by
+evaluating a snippet along the lines of `target.methods.sort - Object.methods`,
+and what's not nice about typing that 10x a day?
 
 Luckily for you and I (but not my love of typing `Object.methods`), shortly
-after my introduction to pry I switched jobs into a dev environment where `pry`
-(via [`pry-rails`](https://github.com/rweng/pry-rails)) was the de facto `rails
-console` replacement and thanks in large part to its debugging story and the
-power of `binding.pry`, I've never looked back.
+after my introduction to pry, I switched jobs and found myself in a dev
+environment where `pry` (via [`pry-rails`](https://github.com/rweng/pry-rails))
+was the de facto `rails console` replacement and thanks in large part to its
+debugging story and the power of `binding.pry`, I've never looked back.
 
 As it turns out, in retrospect, I think my initial roll-of-the-eyes was not in
 response to pry but to the co-worker who introduced me to it; every objection
@@ -35,8 +36,7 @@ resources for getting started with pry next.
 
 For those unfamiliar with pry, pry bills itself as
 
-> A powerful alternative to the standard [`irb` shell for
-> Ruby](https://en.wikipedia.org/wiki/Interactive_Ruby_Shell)
+> A powerful alternative to the standard irb shell for Ruby
 
 Written from scratch with advanced functionality in mind, if IRB was [Star
 Trek: The Next Generation's Commander
@@ -45,9 +45,9 @@ the beard.
 
 ![Commander William T.  Riker](https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/04124355/riker.jpg)
 
-The full beardth, er, rather, breadth of the awesomeness of pry is
-too much to go into in this article, but the team behind pry has done a great
-job of covering most of what you might want to know over at
+The full beardth, er, rather, breadth of the awesomeness of pry is too much to
+go into in this article, but the team behind pry has done a great job of
+covering most of what one might want to know over at
 [pryrepl.org](http://pryrepl.org/).
 
 At a glance, some of the advantages of pry are:
@@ -64,13 +64,13 @@ At a glance, some of the advantages of pry are:
   - Many convenience commands inspired by IPython, Smalltalk and other advanced
     REPLs
 
-On top of all those built-in features, pry is enormously extensible with an
-ecosystem of fun and powerful plugins contributed and maintained by the
-pry community.
+If a bulleted list isn't enough to convince you, consider also that pry is
+enormously extensible with an ecosystem of fun and powerful plugins contributed
+and maintained by the pry community.
 
-All that said, if you haven't tried pry, I strongly recommend doing so. There's
-really no substitute for spending a few minutes playing around in a pry shell to
-explore the conveniences and utility it offers.
+There's really no substitute for spending a few minutes playing around in a pry
+shell to explore the conveniences and utility it offers, so if you haven't
+gotten hands-on with pry, I strongly recommend doing so.
 
 At this point, I'm going to assume you're sold on pry (if you weren't already),
 and move on to the main focus of this article, pry plugins.
@@ -83,9 +83,9 @@ immediate and total sense, as we'll dig more into the details as we explore.
 Okay, here goes:
 
 > A pry plugin is a gem or library designed to integrate with and extend pry
-> either by augmenting pry with new commands or by hooking into the pry
-> [read-eval-print loop](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop) to
-> add new behavior.
+> either by augmenting pry with new commands and/or by hooking into pry's
+> [read-eval-print loop](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)
+> to add new behavior.
 
 Whew, that's a mouthful. Since I imagine it's the second half of that sentence
 that will elicit the most blank stares, let's look at some of the different
@@ -94,7 +94,7 @@ their thing.
 
 #### Pry's wild world of plugins
 
-Plugins typically fall into one of a few common categories based on the type of
+Pry plugins typically fall into one of a few common categories based on the type of
 functionality they provide:
 
   - Debugging tools
@@ -109,7 +109,16 @@ functionality they provide:
     - [pry-theme](https://github.com/kyrylo/pry-theme)
 
 These are just a few of the available plugins and even more can be found at
-[Pry - Available Plugins](https://github.com/pry/pry/wiki/Available-plugins)
+[Pry - Available Plugins](https://github.com/pry/pry/wiki/Available-plugins).
+
+Let's rewind to the second half of our definition of a *pry plugin* and see if
+any of the above specimen can help better illuminate its meaning. If we break it
+down, 
+
+
+
+
+
 
 ## Integrating with Pry
 
