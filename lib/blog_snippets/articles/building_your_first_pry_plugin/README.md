@@ -161,12 +161,12 @@ be fairly familiar with what a Pry command is, we begin there.
 
 ### Commands and the pry command system
 
-Adding new commands to Pry can be one of the easiest ways to add new
-functionality to Pry. Pry takes great pride in its command system as one of the
-things that sets Pry apart from other REPLs. The trick up Pry's sleeve is that
-Pry commands aren't methods like they might seem. Rather, they are special
-strings that are caught by Pry before the input buffer is evaluated. This
-approach has a number of advantages:
+Adding new commands to Pry is one of the easiest ways to add new functionality
+to Pry. Pry takes great pride in its command system as one of the things that
+sets Pry apart from other REPLs. The trick up Pry's sleeve is that Pry commands
+aren't methods like they might seem. Rather, they are special strings that are
+caught by Pry before the input buffer is evaluated. This approach has a number
+of advantages:
 
 - Commands can do things that methods cannot do, such as modifying the input
   buffer.
@@ -184,44 +184,92 @@ New commands can be added to the Pry command shell in a variety of ways.
 
 **Import a command set from code:**
 
-```ruby
+```{"language": "ruby", "gutter": false}
 Pry.commands.import(PryMacro::Commands)
 ```
 
 **Import a command set into the current Pry session from REPL:**
 
-```ruby
+```{"language": "ruby", "gutter": false}
 import-set PryMacro::Commands
 ```
 
 **Add a command to the current Pry instance's command set:**
 
-```ruby
+```{"language": "ruby", "gutter": false}
 Pry::Commands.add_command(PryTheme::Command::PryTheme)`
 ```
 
-```ruby
+```{"language": "ruby", "gutter": false}
 Pry.commands.add_command(PryByebug::NextCommand)`
 ```
 
 **Create a command directly on the REPLs default command set:**
 
-```ruby
+```{"language": "ruby", "gutter": false}
 Pry.commands.block_command("hello", "Say hello to three people") do |x, y, z|
   output.puts "hello there #{x}, #{y}, and #{z}!"
 end
 ```
 
 Though there are a couple of different variations on how it is achieved, each of
-the above examples adds commands to the Pry session's default `Pry::CommandSet`.
+the above examples adds commands to Pry's default
+[`Pry::CommandSet`](http://www.rubydoc.info/github/pry/pry/Pry/CommandSet).
+
 A command set is Pry's mechanism for organizing groups of commands. The default
-command set is automatically generated with Pry's built-in commands and can be
-accessed via `Pry.commands` or `Pry::Commands`. As the previous examples
-demonstrated, whether to import a whole command set into the default command set
-via the `import` method, or to add just a single command via the `add_command `
+command set is automatically generated with Pry's built-in commands when Pry is
+loaded and can be accessed via `Pry::Commands` or `Pry.commands` (a shortcut to
+`Pry.config.commands`). As the previous examples demonstrated, whether to import
+a whole command set into the default command set via the
+[`Pry::CommandSet#import`](http://www.rubydoc.info/github/pry/pry/Pry/CommandSet#import-instance_method)
+method, or to add just a single command via the
+[`Pry::CommandSet#add_command`](http://www.rubydoc.info/github/pry/pry/Pry/CommandSet#add_command-instance_method)
 method, the default command set is a frequent target of Pry plugins.
 
-### Hooks
+Although command sets also provide a rich DSL for defining new commands and
+adding them to the set of commands, as is demonstrated above via
+[`Pry::CommandSet#block_command`](http://www.rubydoc.info/github/pry/pry/Pry/CommandSet#block_command-instance_method),
+I personally prefer to follow the pattern that Pry itself uses for all of its
+built-in commands, which is a more traditional inheritance / class-based
+approach that involves subclassing
+[`Pry::ClassCommand`](http://www.rubydoc.info/github/pry/pry/Pry/ClassCommand).
+
+By defining each command as its own class I find it reduces coupling and makes
+testing easier and more flexible by removing extra complexity added by the
+command set. Approaching each custom command as its own class also allows
+flexibility later on, in that if I think a command should be added to a command
+set down the road, I always have the freedom to do so using
+`Pry::CommandSet.add_command`.
+
+We'll look more at `Pry::ClassCommand` and the process of defining a class-style
+command later when it's time to build our custom Pry plugin. For now though,
+let's take a step back and consider another means of working with commands that
+is handy in those situations where the goal is not to add an entirely new
+command, but to modify the behavior of an built-in or otherwise existing
+command.
+
+### Command hooks
+
+To facilitate customization and extension of existing commands, Pry includes a
+couple of methods on each `Pry::CommandSet` instance that allow for registering
+hooks that should fire before or after the matching command. This approach is
+advantageous because it allows for modifying the behavior of a command in one
+command set while leaving the behavior of that command unchanged in another
+command set.
+
+Aptly named, the methods to hook into the execution cycle of an existing
+command,
+[`Pry::CommandSet#before_command`](http://www.rubydoc.info/github/pry/pry/Pry/CommandSet#before_command-instance_method)
+and
+[`Pry::CommandSet#after_command`](http://www.rubydoc.info/github/pry/pry/Pry/CommandSet#after_command-instance_method),
+both take a matcher that will be used to determine which commands the hook
+should be run for. In this fashion, it's actually possible to write a hook that
+fires before or after all commands. This can be incredibly powerful, but it can
+also be a little awkward to get the desired behavior when wrapping the execution
+of a command at a higher level.
+
+
+### REPL Hooks
 
 ## Let's make something!
 
@@ -246,5 +294,6 @@ method, the default command set is a frequent target of Pry plugins.
 - [Pry - Available Plugins](https://github.com/pry/pry/wiki/Available-plugins)
 - [Custom Commands - pry/pry Wiki](https://github.com/pry/pry/wiki/Custom-commands)
 - [Command System - pry/pry Wiki](https://github.com/pry/pry/wiki/Command-system)
+- [Pry::CommandSet - rubydoc.info](http://www.rubydoc.info/github/pry/pry/Pry/CommandSet)
 - [PryCommandSetRegistry gem | RubyGems.org](https://rubygems.org/gems/pry-command-set-registry)
 - [tdg5/pry-command-set-registry - Github](https://github.com/tdg5/pry-command-set-registry)
