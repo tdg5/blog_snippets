@@ -1,5 +1,6 @@
-require "redcarpet"
+require "English"
 require "json"
+require "redcarpet"
 
 module BlogSnippets
   module Renderers
@@ -41,7 +42,7 @@ module BlogSnippets
 
       def add_header_links!(document)
         document.gsub!(HEADER_MATCHER) do |match|
-          match_data = $~
+          match_data = $LAST_MATCH_INFO
           match[0..-6] +
             %Q|<a href="##{match_data[:id]}"><i class="header-link dashicons dashicons-admin-links"></i></a>| +
             "</h#{match_data[:level]}>"
