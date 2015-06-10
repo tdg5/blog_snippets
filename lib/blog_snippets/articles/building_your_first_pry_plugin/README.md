@@ -1,38 +1,33 @@
 ![Pry Plugins](https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/08104046/pry_plugins.jpg)
 
-When I was first introduced to the [pry](https://rubygems.org/gems/pry) gem
-and the alternative Ruby
-[CLI](https://en.wikipedia.org/wiki/Command-line_interface) /
-[REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)
+When I was first introduced to the [pry](https://rubygems.org/gems/pry) gem and
+the alternative Ruby [CLI](https://en.wikipedia.org/wiki/Command-line_interface)
+/ [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)
 experience it provides, I have to admit, I didn't get it. I didn't understand
 why `pry` was a better option than
 [irb](https://en.wikipedia.org/wiki/Interactive_Ruby_Shell) or more typically
-for me, `rails console`. Sure, Pry's built-in commands like `ls` make for a
-nicer CLI experience, but one could already get similar information by
-evaluating a snippet along the lines of `target.methods.sort - Object.methods`,
-and what's not nice about typing that 10x a day?
+for me, `rails console`. Sure, Pry's built-in commands like `ls` or `cd` (not to
+be confused with their OS shell namesakes) make for a nicer CLI experience, but
+one could already get information similar to the `ls` command by evaluating a
+snippet along the lines of `target.methods.sort - Object.methods`, and what's
+not nice about typing that 10x a day?
 
 Luckily for you and I (but not my love of typing `Object.methods`), shortly
 after my introduction to Pry, I switched jobs and found myself in a dev
 environment where `pry` (via [`pry-rails`](https://github.com/rweng/pry-rails))
-was the de facto `rails console` replacement and thanks in large part to its
-debugging story and the power of `binding.pry`, I've never looked back.
-
-As it turns out, in retrospect, I think my initial roll-of-the-eyes was not in
-response to Pry but to the co-worker who introduced me to it; every objection
-I had with Pry really boiled down to me asking, "Dude, why must everything be
-shiny with you?" Digression aside, the moral of the story is that Pry is a
-powerful irb alternative architected for extension.
+was the de facto `rails console` and thanks in large part to its debugging story
+and the power of `binding.pry`, I've never looked back.
 
 To that end, in this article, we'll look at the basics of creating a Pry
 plugin, from what constitutes a plugin and why you might want to create one, to
 the various hooks and other means Pry provides for plugin integration. To do
 this, we'll be creating a Pry plugin that customizes Pry with a custom
-greeting and can also be used as a sandbox for your future Pry endeavors.
+greeting and can also be used as a sandbox for your own future Pry endeavors.
 
 First though, a little bit about Pry! This article assumes you have some
 familiarity with Pry, but if this isn't the case, never fear, I'll cover some
-resources for getting started with Pry next.
+resources for getting started with Pry next and in the
+[Additional Resources](#additional-resources) section.
 
 ## What is Pry?
 
@@ -43,7 +38,8 @@ For those unfamiliar with Pry, Pry bills itself as
 Written from scratch with advanced functionality in mind, if IRB was [Star
 Trek: The Next Generation's Commander
 Riker](https://en.wikipedia.org/wiki/William_Riker), Pry would be Riker, after
-the beard.
+the beard. Sure, IRB will get you through your first season, but sooner or later
+an away mission comes along and
 
 ![Commander William T. Riker](https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/04124355/riker.jpg)
 
@@ -285,9 +281,15 @@ of a command at a higher level.
 
 ## Next Steps
 
+As it turns out, in retrospect, I think my initial roll-of-the-eyes was not in
+response to Pry but to the co-worker who introduced me to it; every objection
+I had with Pry really boiled down to me asking, "Dude, why must everything be
+shiny with you?" Digression aside, the moral of the story is that Pry is a
+powerful irb alternative architected for extension.
+
 - [Pry Plugin Proposals](https://github.com/pry/pry/wiki/Plugin-Proposals)
 
-## Resources
+## Additional Resources
 
 - [Pry - An IRB alternative and runtime developer console](http://pryrepl.org/)
 - [pry/pry - GitHub](https://github.com/pry/pry)
