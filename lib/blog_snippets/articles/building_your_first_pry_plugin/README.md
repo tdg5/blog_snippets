@@ -39,14 +39,14 @@ Written from scratch with advanced functionality in mind, if IRB was [Star
 Trek: The Next Generation's Commander
 Riker](https://en.wikipedia.org/wiki/William_Riker), Pry would be Riker, after
 the beard. Sure, IRB will get you through your first season, but sooner or later
-an away mission comes along and
+an away mission comes along and once you see what Pry is capable of it's hard to
+go back.
 
 ![Commander William T. Riker](https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/04124355/riker.jpg)
 
-The full beardth, rather, breadth of the awesomeness of Pry is too much to
-go into in this article, but the team behind Pry has done a great job of
-covering most of what one might want to know over at
-[pryrepl.org](http://pryrepl.org/).
+The full beardth, rather, breadth of the awesomeness of Pry is too much to go
+into in this article, but the team behind Pry has done a great job of covering
+most of what one might want to know over at [pryrepl.org](http://pryrepl.org/).
 
 At a glance, some of the advantages of Pry are:
 
@@ -66,9 +66,9 @@ If a bulleted list isn't enough to convince you, consider also that Pry is
 enormously extensible with an ecosystem of fun and powerful plugins contributed
 and maintained by the Pry community.
 
-There's really no substitute for spending a few minutes playing around in a Pry
-shell to explore the conveniences and utility it offers, so if you haven't
-gotten hands-on with Pry, I would definitely recommend doing so.
+All that said, there's really no substitute for spending a few minutes playing
+around in a Pry shell to explore the conveniences and utility it offers, so if
+you haven't gotten hands-on with Pry, I would definitely recommend doing so.
 
 At this point, I'm going to assume you're sold on Pry (if you weren't already),
 and move on to the focus of this article, Pry plugins.
@@ -76,34 +76,82 @@ and move on to the focus of this article, Pry plugins.
 ### What is a Pry plugin, anyway?
 
 So that we're all starting on the same page, let's begin by defining what
-constitutes a Pry plugin:
+constitutes a Pry plugin. First, here's what the [Pry
+wiki](https://github.com/pry/pry/wiki/Plugins#what-is-a-plugin) has to say on
+the matter:
 
-> A Pry plugin is a gem or library designed to integrate with and extend Pry
-> either by augmenting Pry with new commands and/or by hooking into Pry's
-> [read-eval-print loop](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)
-> to add new behavior.
+> A valid Pry plugin is a gem that has the `pry-` prefix (such as the `pry-doc`
+> gem). There must also be a `.rb` file of the same name in the `lib/` folder of
+> the gem. The functionality provided by a plugin is typically implemented by
+> way of the customization and command system APIs.
 
-Whew, what a mouthful! And what does it mean? Let's break it down.
+I think this definition does a fair job of describing the situation, but I have
+two gripes with this definition. First, this definition is out-dated and makes
+no reference to the various hooks built into Pry for customizing behavior. More
+on that later.
 
-From a certain point of view, this definition is made up of two parts. One part
-describing what a Pry plugin is:
+Second, though it is convenient that Pry will automatically load plugins that
+have a `pry-` prefix, there is nothing preventing a gem without such a prefix
+from plugging into and extending Pry. Maybe it is preferable to default to
+allowing all the things to be loaded by Pry automatically and, thus, defer which
+plugins are actually loaded to Pry and the `.pryrc` file. But, even if that is
+the reasoning behind this nomenclature, it seems excessive to suggest such a
+plugin is "invalid", as there is almost certainly a use-case for a Pry plugin
+that is not automatically loaded by Pry. Eh, I'm probably being overly semantic.
 
-> A Pry plugin is a gem or library designed to integrate with and extend Pry
+My complaints registered, I submit the following definition for a Pry plugin:
 
-And one part describing what a Pry plugin does:
+> A Pry plugin is a gem that integrates with Pry, typically by configuring
+> environment behavior through Pry's customization API; altering or extending
+> Pry's command system; and/or by registering behavior via Pry's system of
+> life-cycle and REPL hooks. Plugins named with a `pry-` prefix (e.g. `pry-doc`)
+> and including a matching `.rb` file in the plugin's `lib` directory (e.g.
+> `pry-doc/lib/pry-doc.rb` will be loaded by Pry automatically unless explicitly
+> configured otherwise.
 
-> A Pry plugin ... [extends] Pry either by augmenting Pry with new commands
-> and/or by hooking into Pry's read-eval-print loop to add new behavior.
+Whew, what a mouthful! And what does it all mean? Let's break it down.
 
-As you may have picked up on already, in Pry terms, **commands** are the various
-special commands built into Pry like `ls` or `whereami` that don't evaluate as
-Ruby code, but instead enhance the shell experience in some way. **Going beyond
-the built-in commands, many Pry plugins extend Pry with new commands.**
+[From a certain point of view](https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/11123401/obi-wan.png),
+this definition is made up of three parts. One part describing how a Pry plugin
+is composed and what it does:
 
-But not all Pry plugins add commands, instead, some plugins change the behavior
-of Pry's cycle of reading an input, evaluating that input, and outputting the
-result of that evaluation. Some Pry plugins even add new commands **and** hook
-into the Pry read-eval-print loop!
+> A Pry plugin is a gem that integrates with Pry
+
+One part describing how a plugin does its thing:
+
+> A Pry plugin integrates with Pry... typically by configuring environment
+> behavior through Pry's customization API; altering or extending Pry's command
+> system; and/or by registering behavior via Pry's system of life-cycle and REPL
+> hooks.
+
+And finally, one part describing one oddly particular facet of Pry convention:
+
+> Plugins named with a `pry-` prefix (e.g. `pry-doc`) and including a matching
+> `.rb` file in the plugin's `lib` directory (e.g.  `pry-doc/lib/pry-doc.rb`
+> will be loaded by Pry automatically unless explicitly configured otherwise.
+
+Since the first part of the definition is entirely unsatisfying in isolation and
+the third part feels somewhat superfluous and arbitrary, let's focus on the meat
+of our definition sandwich, which in this case is made up of three parts. We'll
+talk about each of these subjects in more depth later, but for now here's a
+little bit of background on each.
+
+Pry's customization API is an easy to use API that allows for configuring many
+of Pry's internals such as prompts, colors, printers, pagers, and more.
+Depending on your particular use case, the customization API may be all that you
+need to achieve the behavior you desire.
+
+Next up we have Pry's command system. As you may have picked up on already, in
+Pry terms, **commands** are the various special commands built into Pry like
+`ls` or `whereami` that don't evaluate as Ruby code, but instead enhance the
+shell experience in some way. In addition to Pry's built-in commands, many Pry
+plugins extend Pry by adding new commands that further enhance and extend the
+Pry experience.
+
+Finally, Pry's system of hooks allows plugins to register behavior at various
+points in Pry's life-cycle and cycle of reading and evaluating input and
+outputting the result of that evaluation. Some Pry plugins even add new commands
+**and** hook into Pry's system of hooks.
 
 Now that we've covered some background on what a Pry plugin is, let's see if we
 can find examples of these behaviors in plugins out there in the wild.
