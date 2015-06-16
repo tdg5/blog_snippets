@@ -24,3 +24,4 @@ Gemfile.lock
 
 ## Random
 /src.html
+config/database.yml
