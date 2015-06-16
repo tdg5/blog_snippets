@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+
+require "ruby-wpdb"
+require "redcarpet"
+require "blog_snippets/renderers/wordpress_html_renderer"
+require "blog_snippets/markdown_to_html_transformer"
+require "yaml"
+
+source_path = ARGV[1]
+raise "#{source_path} does not exist!" unless File.exist?(source_path)
+
+db_config = YAML.load(File.read(File.expand_path("../../config/database.yml", __FILE__)))
+WPDB.init(db_config["database_url"], db_config["wp_prefix"])
+
+raw_source = File.read(source_path)
+renderer = BlogSnippets::Renderers::WordpressHTMLRenderer.new
+transformer = BlogSnippets::MarkdownToHTMLTransformer.new({
+  :parser_class => Redcarpet::Markdown,
+  :renderer => renderer
+})
+post_content = transformer.transform(raw_source)
+
+post_id = Integer(ARGV[0])
+post = WPDB::Post.where(:id => post_id).first
+last_revision = post.revisions.last
+revision = WPDB::Post.new
+last_revision.keys.each {|key| revision.send("#{key}=", post.send(key)) }
+revision.ID = nil
+revision.instance_variable_set(:@new, true)
+revision.post_content = post_content
+revision.post_modified = Time.now
+revision.post_modified_gmt = Time.now.utc
+revision.save
