@@ -206,10 +206,65 @@ integrate with Pry: by using the customization API, by adding commands to the
 Pry shell and/or by registering callbacks into the read-eval-print loop or
 session life-cycle. Since many of the configurables exposed by Pry's
 customization API are intended for manipulation from a user's `.pryrc` file,
-let's start there to get a better feeling for what can be accomplished via
+let's start there to get a better feeling for what can be accomplished with
 simple configuration and what is better suited to a more fully-featured plugin.
 
 ### Pry's customization API
+
+Pry's customization API is exposed via a configuration object on the `Pry`
+constant, `Pry.config`. The configuration object provides an interface for a
+variety of configurations and components that Pry exposes to allow for
+customizing Pry in a variety of common ways. Typically, this configuration is
+customized from a user's `.pryrc` or from Pry plugin. Though the majority of the
+configuration is shared by all Pry instances, [some of the configurations can
+vary between Pry instances][Pry Wiki - Customization and configuration - Per-instance customization].
+
+Though we'll take a quick tour of what the customization API has to offer,
+because these configurations vary in complexity and impact, full coverage of
+Pry's customization API is best left to the wiki on the matter: [Pry Wiki -
+Customization and configuration][Pry Wiki - Customization and configuration].
+
+The table below covers the full list of configurables, configuration names,
+descriptions, and any applicable defaults.
+
+Feature               | Configuration Name               | Description
+--------------------- | -------------------------------- | -----------
+Auto Indent           | `Pry.config.auto_indent`         | Boolean determining whether automatic indenting of input will occur. Defaults to `true`.
+Color                 | `Pry.config.color`               | Boolean determining whether color will be used. Defaults to `true`.
+Command Prefix        | `Pry.config.command_prefix`      | When present, commands will not be acknowledged unless they are prefixed with the given string. Defaults to `""`.
+CommandSet Object     | `Pry.config.commands`            | The `Pry::CommandSet` responsible for providing commands to the session. Defaults to `Pry::Commands`.
+Editor                | `Pry.config.editor`              | String or Proc determining what editor should be used. Defaults to `ENV["EDITOR"]`.
+Exception Handler     | `Pry.config.exception_handler`   | Proc responsible for handling exceptions raised by user input to the REPL. Defaults to `Pry::DEFAULT_EXCEPTION_HANDLER`.
+Exception White-list  | `Pry.config.exception_whitelist` | A list of exceptions that Pry should not catch. Defaults to `[SystemExit, SignalException]`.
+Exception Window Size | `Pry.config.default_window_size` | How many lines of context should be shown around the line that raised an exception. Defaults to `5`.
+History               | `Pry.config.history`             | A configuration object of [history-related configurations][Pry Wiki - Customization and configuration - History].
+Indent Correction     | `Pry.config.correct_indent`      | Boolean determining whether correcting of indenting will occur. Defaults to `true`.
+Input Object          | `Pry.config.input`               | The object from which Pry retrieves lines of input. Defaults to `Readline`.
+Memory Size           | `Pry.config.memory_size`         | Determines the size of the `_in_` and `_out_` cache. Defaults to `100`.
+Output Object         | `Pry.config.output`              | The object to which Pry writes its output. Defaults to `$stdout`.
+Pager                 | `Pry.config.pager`               | Boolean determining whether a pager will be used for long output. Defaults to `true`.
+Plugin Loading        | `Pry.config.should_load_plugins` | Boolean determining whether plugins should be loaded. Defaults to `true`.
+Print Object          | `Pry.config.print`               | The object responsible for displaying expression evaluation output. Defaults to `Pry::DEFAULT_PRINT`.
+Prompt                | `Pry.config.prompt`              | A Proc or an Array of two Procs that will be used to determine the prompt. [Read more][Pry Wiki - Customization and configuration - The Prompt].
+Prompt Name           | `Pry.config.prompt_name`         | String that prefixes the prompt. Defaults to `pry`.
+RC-file Loading       | `Pry.config.should_load_rc`      | Boolean determining whether the RC file should be load. Defaults to `true`.
+
+As you can probably already tell, there's a lot you can do with these
+configurations. One of my favorite examples of using one of these configurations
+comes in the form of a fun little April fools gag involving customizing Pry's
+print object:
+
+```ruby
+Pry.config.print = proc { |out, val| out.puts(val.inspect.reverse) }
+```
+
+This customization will function similar to Pry's default printer, except all
+output will be reversed!
+
+That does it for our coverage of Pry's customization API. I encourage you to
+explore Pry's configurations as many of these customizations can be pretty handy
+at times, even if they're not useful for you on a day-to-day basis. For now
+though, we move on to Pry's built-in command system.
 
 ### Commands and the pry command system
 
@@ -365,6 +420,10 @@ powerful irb alternative architected for extension.
 [Pry Wiki - Available Plugins]: https://github.com/pry/pry/wiki/Available-plugins "Pry Wiki - Available Plugins"
 [Pry Wiki - Command System]: https://github.com/pry/pry/wiki/Command-system "Pry Wiki - Command System"
 [Pry Wiki - Custom Commands]: https://github.com/pry/pry/wiki/Custom-commands "Pry Wiki - Custom Commands"
+[Pry Wiki - Customization and configuration]: https://github.com/pry/pry/wiki/Customization-and-configuration
+[Pry Wiki - Customization and configuration - Per-instance customization]: https://github.com/pry/pry/wiki/Customization-and-configuration#per-instance-customization
+[Pry Wiki - Customization and configuration - History]: https://github.com/pry/pry/wiki/Customization-and-configuration#history
+[Pry Wiki - Customization and configuration - The Prompt]: https://github.com/pry/pry/wiki/Customization-and-configuration#the-prompt
 [Pry Wiki - Plugin Proposals]: https://github.com/pry/pry/wiki/Plugin-Proposals "Pry Wiki - Plugin Proposals"
 [Pry Wiki - Plugins - What is a Plugin?]: https://github.com/pry/pry/wiki/Plugins#what-is-a-plugin "Pry Wiki - Plugins - What is a Plugin?"
 [Pry::ClassCommand - RubyDoc]: http://www.rubydoc.info/github/pry/pry/Pry/ClassCommand "Pry::ClassCommand - RubyDoc.info"
