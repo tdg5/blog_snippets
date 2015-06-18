@@ -250,21 +250,55 @@ Prompt Name           | `Pry.config.prompt_name`         | String that prefixes 
 RC-file Loading       | `Pry.config.should_load_rc`      | Boolean determining whether the RC file should be load. Defaults to `true`.
 
 As you can probably already tell, there's a lot you can do with these
-configurations. One of my favorite examples of using one of these configurations
-comes in the form of a fun little April fools gag involving customizing Pry's
-print object:
+configurations. One of my favorite examples of putting these configurations to
+good use comes in the form of a fun little April fools gag involving customizing
+[Pry's print object][Pry Wiki - Customization and configuration - Print Object].
+This custom custom print object functions similar to Pry's default printer,
+except all output will be reversed!
 
 ```ruby
 Pry.config.print = proc { |out, val| out.puts(val.inspect.reverse) }
 ```
 
-This customization will function similar to Pry's default printer, except all
-output will be reversed!
+Another useful configuration to be aware of is [Pry's pager
+flag][Pry Wiki - Customization and configuration - Pager]. The pager flag
+dictates whether or not Pry will use a pager application when displaying long
+output. Though I don't recommend copy-pasta with Pry (seeing as `load`ing a
+source file is usually a far superior option), if you do occasionally paste code
+snippets into Pry, it can be useful to disable the use of a pager application
+since the context switch to the pager application will often wreck havoc on the
+paste process. The pager can be disabled like so:
 
-That does it for our coverage of Pry's customization API. I encourage you to
-explore Pry's configurations as many of these customizations can be pretty handy
-at times, even if they're not useful for you on a day-to-day basis. For now
-though, we move on to Pry's built-in command system.
+```ruby
+Pry.config.pager = false
+```
+
+Enabling the pager again is similarly simple:
+
+```ruby
+Pry.config.pager = true
+```
+
+We'll talk more about Pry commands in the next section, but in the meantime,
+here are a couple of simple commands (inspired by the infamous
+[University of Florida Taser incident][University of Florida Taser incident - Wikipedia])
+that you can add to your `.pryrc` to enable and disable Pry's pager
+functionality:
+
+```ruby
+Pry.commands.block_command(/don't-page-me-bro/, "Disable pager, bro.") do
+  Pry.config.pager = false
+end
+
+Pry.commands.block_command(/page-me-bro/, "Enable pager, bro.") do
+  Pry.config.pager = true
+end
+```
+
+That does it for our coverage of Pry's customization API. I definitely encourage
+you to explore Pry's configurations as many of these customizations can be
+pretty handy at times, even if they're not useful for you on a day-to-day basis.
+For now though, we move on to Pry's built-in command system.
 
 ### Commands and the pry command system
 
@@ -420,10 +454,12 @@ powerful irb alternative architected for extension.
 [Pry Wiki - Available Plugins]: https://github.com/pry/pry/wiki/Available-plugins "Pry Wiki - Available Plugins"
 [Pry Wiki - Command System]: https://github.com/pry/pry/wiki/Command-system "Pry Wiki - Command System"
 [Pry Wiki - Custom Commands]: https://github.com/pry/pry/wiki/Custom-commands "Pry Wiki - Custom Commands"
-[Pry Wiki - Customization and configuration]: https://github.com/pry/pry/wiki/Customization-and-configuration
-[Pry Wiki - Customization and configuration - Per-instance customization]: https://github.com/pry/pry/wiki/Customization-and-configuration#per-instance-customization
 [Pry Wiki - Customization and configuration - History]: https://github.com/pry/pry/wiki/Customization-and-configuration#history
+[Pry Wiki - Customization and configuration - Pager]: https://github.com/pry/pry/wiki/Customization-and-configuration#Config_pager
+[Pry Wiki - Customization and configuration - Per-instance customization]: https://github.com/pry/pry/wiki/Customization-and-configuration#per-instance-customization
+[Pry Wiki - Customization and configuration - Print Object]: https://github.com/pry/pry/wiki/Customization-and-configuration#Config_print
 [Pry Wiki - Customization and configuration - The Prompt]: https://github.com/pry/pry/wiki/Customization-and-configuration#the-prompt
+[Pry Wiki - Customization and configuration]: https://github.com/pry/pry/wiki/Customization-and-configuration
 [Pry Wiki - Plugin Proposals]: https://github.com/pry/pry/wiki/Plugin-Proposals "Pry Wiki - Plugin Proposals"
 [Pry Wiki - Plugins - What is a Plugin?]: https://github.com/pry/pry/wiki/Plugins#what-is-a-plugin "Pry Wiki - Plugins - What is a Plugin?"
 [Pry::ClassCommand - RubyDoc]: http://www.rubydoc.info/github/pry/pry/Pry/ClassCommand "Pry::ClassCommand - RubyDoc.info"
@@ -435,6 +471,7 @@ powerful irb alternative architected for extension.
 [Pry::CommandSet#import - RubyDoc]: http://www.rubydoc.info/github/pry/pry/Pry/CommandSet#import-instance_method "Pry::CommandSet#import - RubyDoc.info"
 [REPL - Wikipedia]: https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop "Read-eval-print Loop - Wikipedia.org"
 [Riker meme]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/04124355/riker.jpg "Command Riker says: Set beard to maximum stun."
+[University of Florida Taser incident - Wikipedia]: https://en.wikipedia.org/wiki/University_of_Florida_Taser_incident
 [William Riker - Wikipedia]: https://en.wikipedia.org/wiki/William_Riker "William Riker - Wikipedia.org"
 [pry - GitHub]: https://github.com/pry/pry "pry/pry - GitHub.com"
 [pry-byebug - GitHub]: https://github.com/deivid-rodriguez/pry-byebug "deivid-rodriguez/pry-byebug - GitHub.com"
