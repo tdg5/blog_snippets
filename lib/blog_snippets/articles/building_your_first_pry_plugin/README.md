@@ -11,14 +11,14 @@ of `target.methods.sort - Object.methods`, and what's not nice about typing that
 10x a day?
 
 Luckily for you and I, but not my love of typing `Object.methods`, shortly after
-my introduction to Pry, I switched jobs and found myself in a dev environment
-where `pry` (via [`pry-rails`][pry-rails - RubyGems]) was the de facto `rails
-console` and thanks in large part to the power of `binding.pry` and the
-debugging behavior it offers, I've never looked back.
+my initial star-crossed introduction to Pry, I switched jobs and found myself in
+a dev environment where `pry` (via [`pry-rails`][pry-rails - RubyGems]) was the
+de facto `rails console`. And now look at me, thanks in large part to the power
+of `binding.pry` and the debugging behavior it offers, I've never looked back.
 
 To that end, in this article, we'll look at the basics of creating a Pry
 plugin, from what constitutes a plugin and why you might want to create one, to
-the various hooks and other means Pry provides for plugin integration. To do
+the various hooks and APIs Pry provides for plugin integration. To do
 this, we'll be creating a Pry plugin that customizes Pry with a custom
 greeting and can also be used as a sandbox for your own future Pry endeavors.
 
@@ -31,7 +31,7 @@ resources for getting started with Pry next and in the
 
 For those unfamiliar with Pry, Pry bills itself as
 
-> A powerful alternative to the standard irb shell for Ruby
+> A powerful alternative to the standard IRB shell for Ruby
 
 Written from scratch with advanced functionality in mind, if IRB was [Star Trek:
 The Next Generation's Commander Riker][William Riker - Wikipedia], Pry would be
@@ -45,19 +45,15 @@ The full ~~beardth~~ breadth of the awesomeness of Pry is too much to go
 into in this article, but the team behind Pry has done a great job of covering
 most of what one might want to know over at [pryrepl.org][pryrepl.org].
 
-At a glance, some of the advantages of Pry are:
+At a glance, here are just a few of the advantages of Pry:
 
 - Source code browsing (including core C source with the pry-doc gem)
 - Navigation around state (cd, ls and friends)
-- Documentation browsing
 - Live help system
-- Syntax highlighting
 - Command shell integration (start editors, run git, and rake from within Pry)
 - Runtime invocation (use Pry as a developer console or debugger)
 - A powerful and flexible command system
 - Ability to view and replay history
-- Many convenience commands inspired by IPython, Smalltalk and other advanced
-  REPLs
 
 If a bulleted list isn't enough to convince you, consider also that Pry is
 enormously extensible with an ecosystem of fun and powerful plugins contributed
@@ -65,7 +61,8 @@ and maintained by the Pry community.
 
 All that said, there's really no substitute for spending a few minutes playing
 around in a Pry shell to explore the convenience and utility it offers, so if
-you haven't gotten hands-on with Pry, I would definitely recommend doing so.
+you haven't gotten hands-on with Pry already, I would definitely recommend doing
+so.
 
 At this point, I'm going to assume you're sold on Pry (if you weren't already),
 and move on to the focus of this article, Pry plugins.
@@ -94,7 +91,7 @@ plugins are actually loaded to Pry and the `.pryrc` file. But, even if that is
 the reasoning behind this nomenclature, it seems excessive to suggest that a
 plugin without such a prefix is somehow *invalid*, as there is almost certainly
 a use-case for a Pry plugin that resists being automatically loaded by Pry. Eh,
-I'm probably being overly semantic.
+I'm probably being overly semantic, so enough of my editorializing.
 
 ![Load all the things!][Load all the things meme]
 
@@ -117,7 +114,7 @@ three parts. One part describing how a Pry plugin is composed and what it does:
 
 One part describing how a plugin does its thing:
 
-> A Pry plugin integrates with Pry... typically by configuring environment
+> A Pry plugin ... integrates with Pry, typically by configuring environment
 > behavior through Pry's customization API; altering or extending Pry's command
 > system; and/or by registering behavior via Pry's system of life-cycle and REPL
 > hooks.
@@ -130,14 +127,14 @@ And finally, one part describing one oddly particular facet of Pry convention:
 
 Since the first part of the definition is entirely unsatisfying in isolation and
 the third part feels somewhat superfluous and arbitrary, let's focus on the meat
-of our definition sandwich, which in this case is made up of three parts. We'll
-talk about each of these subjects in more depth later, but for now here's a
-little bit of background on each.
+of our definition sandwich, which in this case also happens to be made up of
+three parts. We'll talk about each of these subjects in more depth later, but
+for now here's a little bit of background on each.
 
 Pry's **customization API** is an easy to use API that allows for configuring
 many of Pry's internals such as prompts, colors, printers, pagers, and more.
-Depending on your particular use-case, the customization API may be all that you
-need to achieve the behavior you desire.
+Depending on your particular use-case, the customization API may be everything
+you need to build out the functionality desired.
 
 Next up we have Pry's command system. As you may have picked up on already, in
 Pry terms, **commands** are the various special commands built into Pry like
@@ -148,8 +145,11 @@ Pry experience.
 
 Finally, Pry's system of **hooks** allow plugins to register behavior at various
 points in Pry's life-cycle and cycle of reading, evaluating, and printing input
-and output. Many Pry plugins add new commands **and** hook into Pry's system of
-hooks.
+and output.
+
+Each of these integration methods can be used in isolation or in combination.
+In fact, it is very common for Pry plugins to add new commands **and** hook into
+Pry's system of hooks.
 
 Now that we've covered some background on what a Pry plugin is, let's see if we
 can find examples of these behaviors in plugins out there in the wild.
@@ -161,22 +161,22 @@ functionality they provide:
 
 **Debugging tools:**
 
-- pry-byebug: [RubyGems][pry-byebug - RubyGems] | [GitHub][pry-byebug - GitHub]
-- pry-debugger: [RubyGems][pry-debugger - RubyGems] | [GitHub][pry-debugger - GitHub]
-- pry-remote: [RubyGems][pry-remote - RubyGems] | [GitHub][pry-remote - GitHub]
+- pry-byebug ([RubyGems][pry-byebug - RubyGems] | [GitHub][pry-byebug - GitHub])
+- pry-debugger ([RubyGems][pry-debugger - RubyGems] | [GitHub][pry-debugger - GitHub])
+- pry-remote ([RubyGems][pry-remote - RubyGems] | [GitHub][pry-remote - GitHub])
 
 **Command-line interface (CLI) / Command shell:**
 
-- pry-rails: [RubyGems][pry-rails - RubyGems] | [GitHub][pry-rails - GitHub]
-- pry-macro: [RubyGems][pry-macro - RubyGems] | [GitHub][pry-macro - GitHub]
+- pry-rails ([RubyGems][pry-rails - RubyGems] | [GitHub][pry-rails - GitHub])
+- pry-macro ([RubyGems][pry-macro - RubyGems] | [GitHub][pry-macro - GitHub])
 
-**Tweaks and enhancements to pry itself:**
+**Tweaks and enhancements to Pry itself:**
 
-- pry-coolline: [RubyGems][pry-coolline - RubyGems] | [GitHub][pry-coolline - GitHub]
-- pry-theme: [RubyGems][pry-theme - RubyGems] | [GitHub][pry-theme - GitHub]
+- pry-coolline ([RubyGems][pry-coolline - RubyGems] | [GitHub][pry-coolline - GitHub])
+- pry-theme ([RubyGems][pry-theme - RubyGems] | [GitHub][pry-theme - GitHub])
 
-These are just a few of the available plugins and even more can be found at [Pry
-- Available Plugins][Pry Wiki - Available Plugins].
+These are just a few of the available plugins and even more can be found in the [Pry
+Wiki's list of Available Plugins][Pry Wiki - Available Plugins].
 
 The plugins within each category, depending on the functionality provided,
 typically integrate with Pry in a similar fashion. For example, `pry-rails` and
@@ -188,26 +188,26 @@ Finally, tending toward other extremes, Pry's family of debugging tools
 integrate with Pry by whatever means necessary to provide the advertised
 functionality. For example, `pry-debugger` and `pry-byebug` (a fork of
 `pry-debugger`) both intercept calls to `Pry.start` to inject their behavior.
-Taking an alternate approach, `pry-remote` adds an entirely different interface
+Taking another alternate approach, `pry-remote` adds an entirely different interface
 for starting a Pry session, `Object#remote_pry`, that encapsulates the logic to
 transform a Pry breakpoint into a fully functional
 [Distributed Ruby (DRb)][DRb - Wikibooks] server, ready for a remote client to
-connect.
+connect and begin debugging.
 
 Seeing as the Ruby language facilitates just about any kind of advanced Pry
 integration one might want to monkeypatch in, we won't discuss more advanced
-means of integrating with Pry. Instead, we'll focus on the facilities built
-into Pry specifically for plugin integration.
+means of integrating with Pry. Instead, let's take a look at the facilities
+built into Pry specifically for plugin integration.
 
 ## Integrating with Pry
 
 As we've uncovered so far, there are three primary mechanisms for Pry plugins to
-integrate with Pry: by using the customization API, by adding commands to the
-Pry shell and/or by registering callbacks into the read-eval-print loop or
-session life-cycle. Since many of the configurables exposed by Pry's
-customization API are intended for manipulation from a user's `.pryrc` file,
-let's start there to get a better feeling for what can be accomplished with
-simple configuration and what is better suited to a more fully-featured plugin.
+integrate with Pry: the customization API, Pry commands, and Pry's system of
+hooks into the read-eval-print loop or session life-cycle. Since many of the
+configurables exposed by Pry's customization API are intended for manipulation
+from a user's `.pryrc` file and don't require a full-fledged plugin, let's start
+there to get a better feeling for what can be accomplished with simple
+configuration and what is better suited to a more fully-featured plugin.
 
 ### Pry's customization API
 
@@ -215,9 +215,10 @@ Pry's customization API is exposed via a configuration object on the `Pry`
 constant, `Pry.config`. The configuration object provides an interface for a
 variety of configurations and components that Pry exposes to allow for
 customizing Pry in a variety of common ways. Typically, this configuration is
-customized from a user's `.pryrc` or from Pry plugin. Though the majority of the
-configuration is shared by all Pry instances, [some of the configurations can
-vary between Pry instances][Pry Wiki - Customization and configuration - Per-instance customization].
+customized from a user's `.pryrc`, but it is also available to Pry plugins.
+Though the majority of the configuration is shared by all Pry instances, [some
+of the configurations can vary between Pry instances][Pry Wiki - Customization
+and configuration - Per-instance customization].
 
 Though we'll take a quick tour of what the customization API has to offer,
 because these configurations vary in complexity and impact, full coverage of
@@ -253,7 +254,7 @@ As you can probably already tell, there's a lot you can do with these
 configurations. One of my favorite examples of putting these configurations to
 good use comes in the form of a fun little April fools gag involving customizing
 [Pry's print object][Pry Wiki - Customization and configuration - Print Object].
-This custom custom print object functions similar to Pry's default printer,
+This custom print object functions similar to Pry's default print object,
 except all output will be reversed!
 
 ```ruby
@@ -282,8 +283,11 @@ Pry.config.pager = true
 We'll talk more about Pry commands in the next section, but in the meantime,
 here are a couple of simple commands (inspired by the infamous
 [University of Florida Taser incident][University of Florida Taser incident - Wikipedia])
-that you can add to your `.pryrc` to enable and disable Pry's pager
-functionality:
+that provide a simple example of how the customization API and Pry commands can
+be used together. The example commands provide a command interface to enable and
+disable Pry's pager functionality. We'll cover other ways of adding commands to
+Pry shortly, however for now you could try these commands by adding them to your
+`.pryrc`.
 
 ```ruby
 Pry.commands.block_command(/don't-page-me-bro/, "Disable pager, bro.") do
@@ -300,21 +304,24 @@ you to explore Pry's configurations as many of these customizations can be
 pretty handy at times, even if they're not useful for you on a day-to-day basis.
 For now though, we move on to Pry's built-in command system.
 
-### Commands and the pry command system
+### Commands and the Pry command system
 
 Adding new commands to Pry is one of the easiest ways to add new functionality
 to Pry. Pry takes great pride in its command system as one of the things that
-sets Pry apart from other REPLs. The trick up Pry's sleeve is that Pry commands
+sets it apart from other REPLs. The trick up Pry's sleeve is that Pry commands
 aren't methods like they might seem. Rather, they are special strings that are
 caught by Pry before the input buffer is evaluated. This approach has a number
 of advantages:
 
 - Commands can do things that methods cannot do, such as modifying the input
-  buffer.
+  buffer or using non-standard naming conventions as demonstrated earlier by the
+  example `don't-page-me-bro` command.
 - Commands can support a much richer argument syntax than normal methods.
 - Commands can be invoked in any context since they are local to the Pry
   session. This avoids monkeypatching and/or extending base classes to make
-  commands available in any context.
+  commands available in any context. Clever girl.
+
+![Philosoraptor says: Easy, Breezy, Beautiful, Clever Girl][Philosoraptor meme]
 
 Since Pry commands are themselves implemented in Ruby, there's really an
 endless array of ways commands can be used to extend and customize Pry.
@@ -322,28 +329,6 @@ endless array of ways commands can be used to extend and customize Pry.
 ### Adding new commands
 
 New commands can be added to the Pry command shell in a variety of ways.
-
-**Import a command set from code:**
-
-```{"language": "ruby", "gutter": false}
-Pry.commands.import(PryMacro::Commands)
-```
-
-**Import a command set into the current Pry session from REPL:**
-
-```{"language": "ruby", "gutter": false}
-import-set PryMacro::Commands
-```
-
-**Add a command to the current Pry instance's command set:**
-
-```{"language": "ruby", "gutter": false}
-Pry::Commands.add_command(PryTheme::Command::PryTheme)`
-```
-
-```{"language": "ruby", "gutter": false}
-Pry.commands.add_command(PryByebug::NextCommand)`
-```
 
 **Create a command directly on the REPLs default command set:**
 
@@ -353,22 +338,45 @@ Pry.commands.block_command("hello", "Say hello to three people") do |x, y, z|
 end
 ```
 
+**Add a class-style command to the current Pry instance's command set:**
+
+```{"language": "ruby", "gutter": false}
+Pry::Commands.add_command(PryTheme::Command::PryTheme)`
+```
+
+```{"language": "ruby", "gutter": false}
+Pry.commands.add_command(PryByebug::NextCommand)`
+```
+
+**Import a command set from code:**
+
+```{"language": "ruby", "gutter": false}
+Pry.commands.import(PryMacro::Commands)
+```
+
+**Import a command set into a Pry session from the REPL:**
+
+```{"language": "ruby", "gutter": false}
+import-set PryMacro::Commands
+```
+
 Though there are a couple of different variations on how it is achieved, each of
-the above examples adds commands to Pry's default
+the above examples add commands to Pry's default
 [`Pry::CommandSet`][Pry::CommandSet - RubyDoc].
 
 A command set is Pry's mechanism for organizing groups of commands. The default
 command set is automatically generated with Pry's built-in commands when Pry is
 loaded and can be accessed via `Pry::Commands` or `Pry.commands` (a shortcut to
-`Pry.config.commands`). As the previous examples demonstrated, whether to import
-a whole command set into the default command set via the
+`Pry.config.commands`, our old friend from the customization API). As the
+previous examples demonstrated, whether to import a whole command set into the
+default command set via the
 [`Pry::CommandSet#import`][Pry::CommandSet#import - RubyDoc] method, or to add
 just a single command via the
 [`Pry::CommandSet#add_command`][Pry::CommandSet#add_command - RubyDoc] method,
 the default command set is a frequent target of Pry plugins.
 
 Although command sets also provide a rich DSL for defining new commands and
-adding them to the set of commands, as is demonstrated above via
+adding them to the set of commands, as is demonstrated above with
 [`Pry::CommandSet#block_command`][Pry::CommandSet#block_command - RubyDoc],
 I personally prefer to follow the pattern that Pry itself uses for all of its
 built-in commands, which is a more traditional inheritance / class-based
@@ -391,22 +399,46 @@ command.
 
 ### Command hooks
 
-To facilitate customization and extension of existing commands, Pry includes a
-couple of methods on each `Pry::CommandSet` instance that allow for registering
-hooks that should fire before or after the matching command. This approach is
-advantageous because it allows for modifying the behavior of a command in one
-command set while leaving the behavior of that command unchanged in another
-command set.
+To facilitate customization and extension of existing or previously defined
+commands, Pry includes a couple of methods on each `Pry::CommandSet` instance
+that allow for registering hooks that should fire before or after the matching
+command. This approach is advantageous because it allows for modifying the
+behavior of a command in one command set while leaving the behavior of that
+command unchanged in another command set.
 
 Aptly named, the methods to hook into the execution cycle of an existing
 command, [`Pry::CommandSet#before_command`][Pry::CommandSet#before_command] and
 [`Pry::CommandSet#after_command`][Pry::CommandSet#after_command], both take a
-matcher that will be used to determine which commands the hook should be run
-for. In this fashion, it's actually possible to write a hook that fires before
-or after all commands. This can be incredibly powerful, but it can also be a
-little awkward to get the desired behavior when wrapping the execution of a
-command at a higher level.
+matcher that is used to determine which command the hook should be run for. This
+can be incredibly useful, but it can also be a little awkward to get the
+desired behavior when wrapping the execution of a command at a higher level.
 
+To get a look at these hooks in action, let's consider a simple example of how
+we might hook in before the `install-command` command to add some behavior to
+track how often various commands are installed into a Pry session.
+
+```ruby
+Pry.commands.before_command("install-command") do |command|
+  $statsd.increment("pry_command_installation:#{command}")
+  puts "Thanks for your vote!"
+end
+```
+
+In this case I chose to use `Pry::CommandSet#before_command` to watch for
+command installation, but this may have undesirable consequences. Because the
+hook occurs before the actual command is evaluated, there's no way to know if
+the command succeeds or fails. As a result, the above example will track stats
+for actual commands that were installed as well as non-existent commands that
+will fail to install. As it turns out it doesn't really matter in this case
+seeing as the same is true of `Pry::CommandSet#after_command`. Whether or not
+the command succeeds or fails, both the `before_command` and `after_command`
+hooks will fire receiving only a single argument, nil or the raw String form of
+any arguments given to the command invocation.
+
+Though these hooks may seem of limited use, there are definitely situations
+where they can be enormously useful, for example, in scenarios where
+observer-like behavior is desirable. Command hooks also make for a great
+introduction to Pry's other, more powerful hook API which we cover next.
 
 ### REPL Hooks
 
@@ -449,6 +481,7 @@ powerful irb alternative architected for extension.
 [IRB - Wikipedia]: https://en.wikipedia.org/wiki/Interactive_Ruby_Shell "Interactive Ruby Shell - Wikipedia.org"
 [Load all the things meme]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/12124201/load-all-the-things.jpg "Load all the things!"
 [Obi-Wan meme]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/11123401/obi-wan.png "Obi-Wan says: Many of the truths we cling to depend greatly on our own point of view"
+[Philosoraptor meme]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2014/02/05120415/easy_breeezy_beautiful_clever_girl.jpg "Philosoraptor says: Easy, Breezy, Beautiful, Clever Girl"
 [Pry - RubyGems]: https://rubygems.org/gems/pry "pry | RubyGems.org"
 [Pry Plugins]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/08104046/pry_plugins.jpg "Pry Plugins"
 [Pry Wiki - Available Plugins]: https://github.com/pry/pry/wiki/Available-plugins "Pry Wiki - Available Plugins"
