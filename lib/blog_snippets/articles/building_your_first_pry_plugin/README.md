@@ -217,8 +217,8 @@ variety of configurations and components that Pry exposes to allow for
 customizing Pry in a variety of common ways. Typically, this configuration is
 customized from a user's `.pryrc`, but it is also available to Pry plugins.
 Though the majority of the configuration is shared by all Pry instances, [some
-of the configurations can vary between Pry instances][Pry Wiki - Customization
-and configuration - Per-instance customization].
+of the configurations can vary between Pry
+instances][Pry Wiki - Customization and configuration - Per-instance customization].
 
 Though we'll take a quick tour of what the customization API has to offer,
 because these configurations vary in complexity and impact, full coverage of
@@ -326,7 +326,7 @@ of advantages:
 Since Pry commands are themselves implemented in Ruby, there's really an
 endless array of ways commands can be used to extend and customize Pry.
 
-### Adding new commands
+#### Adding new commands
 
 New commands can be added to the Pry command shell in a variety of ways.
 
@@ -397,14 +397,14 @@ is handy in those situations where the goal is not to add an entirely new
 command, but to modify the behavior of an built-in or otherwise existing
 command.
 
-### Command hooks
+#### Command hooks
 
 To facilitate customization and extension of existing or previously defined
 commands, Pry includes a couple of methods on each `Pry::CommandSet` instance
-that allow for registering hooks that should fire before or after the matching
-command. This approach is advantageous because it allows for modifying the
-behavior of a command in one command set while leaving the behavior of that
-command unchanged in another command set.
+that allow for registering hooks that fire before or after the matching command.
+This approach is advantageous because it allows for modifying the behavior of a
+command in one command set while leaving the behavior of that command unchanged
+in another command set.
 
 Aptly named, the methods to hook into the execution cycle of an existing
 command, [`Pry::CommandSet#before_command`][Pry::CommandSet#before_command] and
@@ -420,7 +420,6 @@ track how often various commands are installed into a Pry session.
 ```ruby
 Pry.commands.before_command("install-command") do |command|
   $statsd.increment("pry_command_installation:#{command}")
-  puts "Thanks for your vote!"
 end
 ```
 
@@ -440,7 +439,95 @@ where they can be enormously useful, for example, in scenarios where
 observer-like behavior is desirable. Command hooks also make for a great
 introduction to Pry's other, more powerful hook API which we cover next.
 
-### REPL Hooks
+### Hooks API
+
+As another means of integrating with Pry, Pry offers a number of hooks that can
+be used to register behavior after each Pry instance is initialized or at
+various points in the Pry read-eval-print loop. These hooks follow more of an
+event-driven programming style that should feel familiar to anyone who's spent
+any time with [`event_machine`][EventMachine - RubyGems] or callbacks in
+JavaScript. Though one could certainly argue that Pry commands are also
+event-driven to a certain degree, Pry commands are different in that they're
+more like defining your own hooks that fire when certain input conditions are
+met. Pry's hooks API, on the other hand, offers integration into some of Pry's
+deeper internals and most important events.
+
+The hooks that make up Pry's hooks API fall into two categories, life-cycle
+hooks and REPL hooks.
+
+#### Life-cycle ~~hooks~~ hook
+
+The `when_started` hook is the only life-cycle hook and it allows arbitrary code
+to be executed whenever a new Pry instance is initialized. In a sense,
+the `when_started` hook can be thought of as a post-initialization hook allowing
+plugins to extend the `Pry#initialize` method with additional logic and behavior.
+
+The arguments given to `when_started` callbacks are: the target of the new Pry
+instance (E.g. the `binding` in `binding.pry`); the Hash of options given to the
+Pry instance at initialization; and finally, the new Pry instance.
+
+`when_started` should be used by plugins that are interested in the original
+target object or options to the Pry instance or plugins that wish to take action
+on a Pry instance immediately after initialization.
+
+#### REPL hooks
+
+As one might expect of a REPL, the majority of Pry's hooks hook into Pry's
+read-eval-print loop. Pry has five REPL hooks. In order of when they tend to
+occur they are: `before_session`, `after_read`, `before_eval`, `after_eval`, and
+`after_session`.
+
+The `before_session` hook is called whenever we drop into a new REPL CLI session.
+The `after_read` hook is called every time a new line of input is read, whether
+or not that line constitutes a complete expression.
+The `before_eval` hook is invoked whenever a complete expression is ready for
+evaluation.
+The `after_eval` hook is invoked after each complete expression is evaluated.
+The `after_session` hook is invoked at the end of each REPL CLI session.
+
+A table summarizing the available hooks, when they are invoked, and what
+arguments are provided to registered callbacks can be found below. That said,
+before we move on, it's worth discussing the distinction between `after_read`
+and `before_eval`. The difference is pretty simple, but can be hard to believe
+until you see it in action. As stated above, `after_read` fires after every
+line of input that is read, while `before_eval` only fires when a complete
+expression is ready for evaluation. Consider for example the following method
+definition:
+
+```ruby
+def standard_example
+  puts "Hello, World!"
+end
+```
+
+If we were to evaluate this method in a Pry session, the `after_read` and
+`before_eval` hooks would fire like so:
+
+```ruby
+pry> def standard_example
+# :after_read
+pry>   puts "Hello, World!"
+# :after_read
+pry> end
+# :after_read
+# :before_eval
+# :after_eval
+```
+
+To get a better feel for when each hook is invoked, the gif below demonstrates
+when each hook fires in the context of a Pry CLI session.
+
+![Pry Hooks in Action][Pry Hooks in Action]
+
+Hook             | Family     | When invoked                             | Arguments
+---------------- | ---------- | ---------------------------------------- | -----------
+`when_started`   | life-cycle | After `Pry#initialize`                   | The target object, the options Hash, and the new Pry instance
+`before_session` | REPL       | Before each REPL session starts          | The output object, the current binding, and the Pry instance
+`after_read`     | REPL       | After each line of input is read         | The input String and the Pry instance
+`before_eval`    | REPL       | Before each input statement is evaluated | The code to be evaluated and the Pry instance
+`after_eval`     | REPL       | After each input statement is evaluated  | The result of the evaluation and the Pry instance
+`after_session`  | REPL       | After each REPL session                  | The output object, the current binding, and the Pry instance
+
 
 ## Let's make something!
 
@@ -477,11 +564,13 @@ powerful irb alternative architected for extension.
 
 [CLI - Wikipedia]: https://en.wikipedia.org/wiki/Command-line_interface "Command Line Interface - Wikipedia.org"
 [DRb - Wikibooks]: https://en.wikibooks.org/wiki/Ruby_Programming/Standard_Library/DRb "Distributed Ruby - Wikibooks.org"
+[EventMachine - RubyGems]: https://rubygems.org/gems/event_machine "event_machine | RubyGems.org"
 [ID - Additional Resources]: #additional-resources "Additional Resources"
 [IRB - Wikipedia]: https://en.wikipedia.org/wiki/Interactive_Ruby_Shell "Interactive Ruby Shell - Wikipedia.org"
 [Load all the things meme]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/12124201/load-all-the-things.jpg "Load all the things!"
 [Obi-Wan meme]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/11123401/obi-wan.png "Obi-Wan says: Many of the truths we cling to depend greatly on our own point of view"
 [Philosoraptor meme]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2014/02/05120415/easy_breeezy_beautiful_clever_girl.jpg "Philosoraptor says: Easy, Breezy, Beautiful, Clever Girl"
+[Pry Hooks in Action]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/23132321/pry_hooks.gif "Pry Hooks in Action"
 [Pry - RubyGems]: https://rubygems.org/gems/pry "pry | RubyGems.org"
 [Pry Plugins]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/08104046/pry_plugins.jpg "Pry Plugins"
 [Pry Wiki - Available Plugins]: https://github.com/pry/pry/wiki/Available-plugins "Pry Wiki - Available Plugins"
