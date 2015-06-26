@@ -11,21 +11,22 @@ of `target.methods.sort - Object.methods`, and what's not nice about typing that
 10x a day?
 
 Luckily for you and I, but not my love of typing `Object.methods`, shortly after
-my initial star-crossed introduction to Pry, I switched jobs and found myself in
+my initial star-crossed introduction to Pry, I changed jobs and found myself in
 a dev environment where `pry` (via [`pry-rails`][pry-rails - RubyGems]) was the
 de facto `rails console`. And now look at me, thanks in large part to the power
 of `binding.pry` and the debugging behavior it offers, I've never looked back.
 
-To that end, in this article, we'll look at the basics of creating a Pry
-plugin, from what constitutes a plugin and why you might want to create one, to
-the various hooks and APIs Pry provides for plugin integration. To do
-this, we'll be creating a Pry plugin that customizes Pry with a custom
-greeting and can also be used as a sandbox for your own future Pry endeavors.
+To that end, in this article, we'll look at the basics of crafting a Pry plugin,
+from what constitutes a plugin and why you might want to create one, to the
+various hooks and APIs Pry provides for plugin integration. Our focus will be
+more on concepts than on code, but never fear! In the next article, we'll put
+this knowledge to good use by creating a Pry plugin that customizes Pry with a
+custom greeting and can also be used as a sandbox for your future Pry endeavors.
+We've got a long way to go to get there, so let's get started!
 
-First though, a little bit about Pry! This article assumes you have some
-familiarity with Pry, but if this isn't the case, never fear, I'll cover some
-resources for getting started with Pry next and in the
-[Additional Resources][ID - Additional Resources] section.
+This article assumes you have some familiarity with Pry, but if this isn't the
+case, never fear, I'll cover some resources for getting started with Pry next
+and in the [Additional Resources][ID - Additional Resources] section.
 
 ## What is Pry?
 
@@ -45,7 +46,7 @@ The full ~~beardth~~ breadth of the awesomeness of Pry is too much to go
 into in this article, but the team behind Pry has done a great job of covering
 most of what one might want to know over at [pryrepl.org][pryrepl.org].
 
-At a glance, here are just a few of the advantages of Pry:
+At a glance, here are just a few of the advantages Pry offers:
 
 - Source code browsing (including core C source with the pry-doc gem)
 - Navigation around state (cd, ls and friends)
@@ -132,9 +133,9 @@ three parts. We'll talk about each of these subjects in more depth later, but
 for now here's a little bit of background on each.
 
 Pry's **customization API** is an easy to use API that allows for configuring
-many of Pry's internals such as prompts, colors, printers, pagers, and more.
-Depending on your particular use-case, the customization API may be everything
-you need to build out the functionality desired.
+many of Pry's internals such as prompts, colors, printers, and more.  Depending
+on your particular use-case, the customization API may be everything you need to
+build out the functionality desired.
 
 Next up we have Pry's command system. As you may have picked up on already, in
 Pry terms, **commands** are the various special commands built into Pry like
@@ -203,11 +204,12 @@ built into Pry specifically for plugin integration.
 
 As we've uncovered so far, there are three primary mechanisms for Pry plugins to
 integrate with Pry: the customization API, Pry commands, and Pry's system of
-hooks into the read-eval-print loop or session life-cycle. Since many of the
+hooks into the read-eval-print loop and instance life-cycle. Since many of the
 configurables exposed by Pry's customization API are intended for manipulation
 from a user's `.pryrc` file and don't require a full-fledged plugin, let's start
 there to get a better feeling for what can be accomplished with simple
-configuration and what is better suited to a more fully-featured plugin.
+configuration before considering what is better suited to a more fully-featured
+plugin.
 
 ### Pry's customization API
 
@@ -220,9 +222,9 @@ Though the majority of the configuration is shared by all Pry instances, [some
 of the configurations can vary between Pry
 instances][Pry Wiki - Customization and configuration - Per-instance customization].
 
-Though we'll take a quick tour of what the customization API has to offer,
-because these configurations vary in complexity and impact, full coverage of
-Pry's customization API is best left to the wiki on the matter: [Pry Wiki -
+We'll take a quick tour of what the customization API has to offer, but because
+these configurations vary in complexity and impact, full coverage of Pry's
+customization API is best left to the wiki on the matter: [Pry Wiki -
 Customization and configuration][Pry Wiki - Customization and configuration].
 
 The table below covers the full list of configurables, configuration names,
@@ -239,6 +241,7 @@ Exception Handler     | `Pry.config.exception_handler`   | Proc responsible for 
 Exception White-list  | `Pry.config.exception_whitelist` | A list of exceptions that Pry should not catch. Defaults to `[SystemExit, SignalException]`.
 Exception Window Size | `Pry.config.default_window_size` | How many lines of context should be shown around the line that raised an exception. Defaults to `5`.
 History               | `Pry.config.history`             | A configuration object of [history-related configurations][Pry Wiki - Customization and configuration - History].
+Hooks Object          | `Pry.config.hooks`               | An object tracking the callbacks registered for each hook event. Defaults to `Pry::DEFAULT_HOOKS`.
 Indent Correction     | `Pry.config.correct_indent`      | Boolean determining whether correcting of indenting will occur. Defaults to `true`.
 Input Object          | `Pry.config.input`               | The object from which Pry retrieves lines of input. Defaults to `Readline`.
 Memory Size           | `Pry.config.memory_size`         | Determines the size of the `_in_` and `_out_` cache. Defaults to `100`.
@@ -250,9 +253,30 @@ Prompt                | `Pry.config.prompt`              | A Proc or an Array of
 Prompt Name           | `Pry.config.prompt_name`         | String that prefixes the prompt. Defaults to `pry`.
 RC-file Loading       | `Pry.config.should_load_rc`      | Boolean determining whether the RC file should be load. Defaults to `true`.
 
+Pry.config.prompt_safe_objects
+Pry.config.input_stack
+Pry.config.windows_console_warning
+Pry.config.disable_auto_reload
+Pry.config.collision_warning
+Pry.config.system
+Pry.config.control_d_handler
+Pry.config.exec_string
+Pry.config.requires
+Pry.config.
+Pry.config.ls
+Pry.config.gist
+Pry.config.command_completions
+Pry.config.file_completions
+Pry.config.has_pry_doc
+Pry.config.should_load_requires
+Pry.config.should_load_local_rc
+Pry.config.should_trap_interupts
+Pry.config.extra_sticky_locals
+Pry.config.completer
+
 As you can probably already tell, there's a lot you can do with these
 configurations. One of my favorite examples of putting these configurations to
-good use comes in the form of a fun little April fools gag involving customizing
+"good" use comes in the form of a fun little April fools gag involving customizing
 [Pry's print object][Pry Wiki - Customization and configuration - Print Object].
 This custom print object functions similar to Pry's default print object,
 except all output will be reversed!
@@ -302,16 +326,16 @@ end
 That does it for our coverage of Pry's customization API. I definitely encourage
 you to explore Pry's configurations as many of these customizations can be
 pretty handy at times, even if they're not useful for you on a day-to-day basis.
-For now though, we move on to Pry's built-in command system.
+For now though, we move on to Pry's command system.
 
 ### Commands and the Pry command system
 
-Adding new commands to Pry is one of the easiest ways to add new functionality
-to Pry. Pry takes great pride in its command system as one of the things that
-sets it apart from other REPLs. The trick up Pry's sleeve is that Pry commands
-aren't methods like they might seem. Rather, they are special strings that are
-caught by Pry before the input buffer is evaluated. This approach has a number
-of advantages:
+Pry takes great pride in its command system as one of the things that sets it
+apart from other REPLs. And not just because adding new commands to Pry is one
+of the easiest ways to add new functionality to Pry. The trick up Pry's sleeve
+is that Pry commands aren't methods like they might seem. Rather, they are
+special strings that are intercepted by Pry before the input buffer is
+evaluated. This approach has a number of advantages:
 
 - Commands can do things that methods cannot do, such as modifying the input
   buffer or using non-standard naming conventions as demonstrated earlier by the
@@ -319,7 +343,9 @@ of advantages:
 - Commands can support a much richer argument syntax than normal methods.
 - Commands can be invoked in any context since they are local to the Pry
   session. This avoids monkeypatching and/or extending base classes to make
-  commands available in any context. Clever girl.
+  commands available in any context.
+
+Clever girl!
 
 ![Philosoraptor says: Easy, Breezy, Beautiful, Clever Girl][Philosoraptor meme]
 
@@ -357,7 +383,7 @@ Pry.commands.import(PryMacro::Commands)
 **Import a command set into a Pry session from the REPL:**
 
 ```{"language": "ruby", "gutter": false}
-import-set PryMacro::Commands
+pry> import-set PryMacro::Commands
 ```
 
 Though there are a couple of different variations on how it is achieved, each of
@@ -368,12 +394,11 @@ A command set is Pry's mechanism for organizing groups of commands. The default
 command set is automatically generated with Pry's built-in commands when Pry is
 loaded and can be accessed via `Pry::Commands` or `Pry.commands` (a shortcut to
 `Pry.config.commands`, our old friend from the customization API). As the
-previous examples demonstrated, whether to import a whole command set into the
-default command set via the
-[`Pry::CommandSet#import`][Pry::CommandSet#import - RubyDoc] method, or to add
-just a single command via the
-[`Pry::CommandSet#add_command`][Pry::CommandSet#add_command - RubyDoc] method,
-the default command set is a frequent target of Pry plugins.
+previous examples demonstrate, the default command set is a frequent target of
+Pry plugins, whether to import another command set into the default command set
+via the [`Pry::CommandSet#import`][Pry::CommandSet#import - RubyDoc] method, or
+to add just a single command via the
+[`Pry::CommandSet#add_command`][Pry::CommandSet#add_command - RubyDoc] method.
 
 Although command sets also provide a rich DSL for defining new commands and
 adding them to the set of commands, as is demonstrated above with
@@ -383,19 +408,19 @@ built-in commands, which is a more traditional inheritance / class-based
 approach that involves subclassing
 [`Pry::ClassCommand`][Pry::ClassCommand - RubyDoc].
 
-By defining each command as its own class I find it reduces coupling and makes
-testing easier and more flexible by removing extra complexity added by the
-command set. Approaching each custom command as its own class also allows
-flexibility later on, in that if I think a command should be added to a command
-set down the road, I always have the freedom to do so using
-`Pry::CommandSet.add_command`.
+Defining each command as its own class reduces coupling and makes testing easier
+and more flexible by removing extra complexity added by the command set.
+Approaching each custom command as its own class also provides flexibility later
+on, in that if somewhere down the road you decide that the command should be
+added to a command set, you always have the freedom to do so using
+[`Pry::CommandSet#add_command`][Pry::CommandSet#add_command - RubyDoc].
 
 We'll look more at `Pry::ClassCommand` and the process of defining a class-style
-command later when it's time to build our custom Pry plugin. For now though,
-let's take a step back and consider another means of working with commands that
-is handy in those situations where the goal is not to add an entirely new
-command, but to modify the behavior of an built-in or otherwise existing
-command.
+command in the next article when it's time to build our custom Pry plugin. For
+now though, let's take a step back and consider another means of working with
+commands that is handy in those situations where the goal is not to add an
+entirely new command, but to modify the behavior of a built-in or otherwise
+existing command.
 
 #### Command hooks
 
@@ -478,11 +503,15 @@ occur they are: `before_session`, `after_read`, `before_eval`, `after_eval`, and
 `after_session`.
 
 The `before_session` hook is called whenever we drop into a new REPL CLI session.
+
 The `after_read` hook is called every time a new line of input is read, whether
 or not that line constitutes a complete expression.
+
 The `before_eval` hook is invoked whenever a complete expression is ready for
 evaluation.
+
 The `after_eval` hook is invoked after each complete expression is evaluated.
+
 The `after_session` hook is invoked at the end of each REPL CLI session.
 
 A table summarizing the available hooks, when they are invoked, and what
@@ -514,11 +543,6 @@ pry> end
 # :after_eval
 ```
 
-To get a better feel for when each hook is invoked, the gif below demonstrates
-when each hook fires in the context of a Pry CLI session.
-
-![Pry Hooks in Action][Pry Hooks in Action]
-
 Hook             | Family     | When invoked                             | Arguments
 ---------------- | ---------- | ---------------------------------------- | -----------
 `when_started`   | life-cycle | After `Pry#initialize`                   | The target object, the options Hash, and the new Pry instance
@@ -528,28 +552,47 @@ Hook             | Family     | When invoked                             | Argum
 `after_eval`     | REPL       | After each input statement is evaluated  | The result of the evaluation and the Pry instance
 `after_session`  | REPL       | After each REPL session                  | The output object, the current binding, and the Pry instance
 
+#### Hooks in action
 
-## Let's make something!
+To get a better feel for when each hook is invoked, the gif below demonstrates
+when each hook fires in the context of a Pry CLI session. The gif below also
+includes examples of hooks registered via the `before_command` and
+`after_command` command hooks we discussed previously.
 
-### my_pry
+![Pry Hooks in Action][Pry Hooks in Action]
 
-#### command to set greeting
+#### Registering hooks
 
-#### Hook to display greeting
+New callbacks can be registered with any of Pry's hook events using the
+`add_hook` method of 
 
-# Afterthoughts
+```ruby
+%i[
+  when_started
+  before_session
+  after_read
+  before_eval
+  after_eval
+  after_session
+].each do |event|
+  Pry.config.hooks.add_hook(event, :"spastic_#{event}") do |out, target, pry|
+    puts(event)
+  end
+end
+Pry.config.commands.before_command("whereami") { |*n| puts "before_whereami#{n && ", #{n.inspect}"}" }
+Pry.config.commands.after_command("whereami") { |*n| puts "after_whereami#{n && ", #{n.inspect}"}" }
+```
 
-## Testing
 
 ## Next Steps
 
-As it turns out, in retrospect, I think my initial roll-of-the-eyes was not in
-response to Pry but to the co-worker who introduced me to it; every objection
-I had with Pry really boiled down to me asking, "Dude, why must everything be
-shiny with you?" Digression aside, the moral of the story is that Pry is a
-powerful irb alternative architected for extension.
+Well, that does it for our coverage of Pry Plugins.
 
-- [Pry Plugin Proposals][Pry Wiki - Plugin Proposals]
+Stay tuned for the next
+article where we'll apply a lot of what's covered here to create a custom
+greeter plugin for Pry. In the meantime, if you're champing at the bit and want
+to exercise your new Pry plugin prowess, take a look at the list of [Pry Plugin
+Proposals][Pry Wiki - Plugin Proposals] over at the Pry wiki for plugin ideas.
 
 ## Additional Resources
 
