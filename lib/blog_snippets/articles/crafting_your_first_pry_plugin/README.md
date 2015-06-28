@@ -22,10 +22,10 @@ various hooks and APIs Pry provides for plugin integration. Our focus will be
 more on concepts than on code, but never fear! In the next article, we'll put
 this knowledge to good use by creating a Pry plugin that customizes Pry with a
 custom greeting and can also be used as a sandbox for your future Pry endeavors.
-We've got a long way to go to get there, so let's get started!
+We've got a long way to go to get there though, so let's get started!
 
 This article assumes you have some familiarity with Pry, but if this isn't the
-case, never fear, I'll cover some resources for getting started with Pry next
+case, worry not, I'll cover some resources for getting started with Pry next
 and in the [Additional Resources][ID - Additional Resources] section.
 
 ## What is Pry?
@@ -193,7 +193,7 @@ Taking another alternate approach, `pry-remote` adds an entirely different inter
 for starting a Pry session, `Object#remote_pry`, that encapsulates the logic to
 transform a Pry breakpoint into a fully functional
 [Distributed Ruby (DRb)][DRb - Wikibooks] server, ready for a remote client to
-connect and begin debugging.
+connect and begin poking around.
 
 Seeing as the Ruby language facilitates just about any kind of advanced Pry
 integration one might want to monkeypatch in, we won't discuss more advanced
@@ -206,7 +206,7 @@ As we've uncovered so far, there are three primary mechanisms for Pry plugins to
 integrate with Pry: the customization API, Pry commands, and Pry's system of
 hooks into the read-eval-print loop and instance life-cycle. Since many of the
 configurables exposed by Pry's customization API are intended for manipulation
-from a user's `.pryrc` file and don't require a full-fledged plugin, let's start
+from a `.pryrc` file and don't require a full-fledged plugin, let's start
 there to get a better feeling for what can be accomplished with simple
 configuration before considering what is better suited to a more fully-featured
 plugin.
@@ -217,69 +217,70 @@ Pry's customization API is exposed via a configuration object on the `Pry`
 constant, `Pry.config`. The configuration object provides an interface for a
 variety of configurations and components that Pry exposes to allow for
 customizing Pry in a variety of common ways. Typically, this configuration is
-customized from a user's `.pryrc`, but it is also available to Pry plugins.
-Though the majority of the configuration is shared by all Pry instances, [some
+customized from a `.pryrc` file, but it is also available to Pry plugins.
+Though the majority of these configurations are shared by all Pry instances, [some
 of the configurations can vary between Pry
 instances][Pry Wiki - Customization and configuration - Per-instance customization].
 
-We'll take a quick tour of what the customization API has to offer, but because
-these configurations vary in complexity and impact, full coverage of Pry's
-customization API is best left to the wiki on the matter: [Pry Wiki -
+Because these configurations vary in complexity and impact, full coverage of
+Pry's customization API is best left to the wiki on the matter: [Pry Wiki -
 Customization and configuration][Pry Wiki - Customization and configuration].
+That said, let's take a quick tour of what the customization API has to offer.
 
-The table below covers the full list of configurables, configuration names,
-descriptions, and any applicable defaults.
+The table below covers the full list of configurables, configuration accessor
+names, descriptions, and any applicable defaults. It's worth noting that these
+configurations may not be available in all versions of Pry. These configurations
+all come from the `0.10.1` version of Pry.
 
-Feature               | Configuration Name               | Description
---------------------- | -------------------------------- | -----------
-Auto Indent           | `Pry.config.auto_indent`         | Boolean determining whether automatic indenting of input will occur. Defaults to `true`.
-Color                 | `Pry.config.color`               | Boolean determining whether color will be used. Defaults to `true`.
-Command Prefix        | `Pry.config.command_prefix`      | When present, commands will not be acknowledged unless they are prefixed with the given string. Defaults to `""`.
-CommandSet Object     | `Pry.config.commands`            | The `Pry::CommandSet` responsible for providing commands to the session. Defaults to `Pry::Commands`.
-Editor                | `Pry.config.editor`              | String or Proc determining what editor should be used. Defaults to `ENV["EDITOR"]`.
-Exception Handler     | `Pry.config.exception_handler`   | Proc responsible for handling exceptions raised by user input to the REPL. Defaults to `Pry::DEFAULT_EXCEPTION_HANDLER`.
-Exception White-list  | `Pry.config.exception_whitelist` | A list of exceptions that Pry should not catch. Defaults to `[SystemExit, SignalException]`.
-Exception Window Size | `Pry.config.default_window_size` | How many lines of context should be shown around the line that raised an exception. Defaults to `5`.
-History               | `Pry.config.history`             | A configuration object of [history-related configurations][Pry Wiki - Customization and configuration - History].
-Hooks Object          | `Pry.config.hooks`               | An object tracking the callbacks registered for each hook event. Defaults to `Pry::DEFAULT_HOOKS`.
-Indent Correction     | `Pry.config.correct_indent`      | Boolean determining whether correcting of indenting will occur. Defaults to `true`.
-Input Object          | `Pry.config.input`               | The object from which Pry retrieves lines of input. Defaults to `Readline`.
-Memory Size           | `Pry.config.memory_size`         | Determines the size of the `_in_` and `_out_` cache. Defaults to `100`.
-Output Object         | `Pry.config.output`              | The object to which Pry writes its output. Defaults to `$stdout`.
-Pager                 | `Pry.config.pager`               | Boolean determining whether a pager will be used for long output. Defaults to `true`.
-Plugin Loading        | `Pry.config.should_load_plugins` | Boolean determining whether plugins should be loaded. Defaults to `true`.
-Print Object          | `Pry.config.print`               | The object responsible for displaying expression evaluation output. Defaults to `Pry::DEFAULT_PRINT`.
-Prompt                | `Pry.config.prompt`              | A Proc or an Array of two Procs that will be used to determine the prompt. [Read more][Pry Wiki - Customization and configuration - The Prompt].
-Prompt Name           | `Pry.config.prompt_name`         | String that prefixes the prompt. Defaults to `pry`.
-RC-file Loading       | `Pry.config.should_load_rc`      | Boolean determining whether the RC file should be load. Defaults to `true`.
+Feature                  | `Pry.config` Accessor     | Description
+-----------------------  | ------------------------- | -----------
+Auto Indent              | `auto_indent`             | Boolean determining whether automatic indenting of input will occur. Defaults to `true`.
+Collision Warning        | `collision_warning`       | Boolean determining whether a warning is shown if a command collides with a local/method in the current scope. Defaults to `false`.
+Color                    | `color`                   | Boolean determining whether color will be used. Defaults to `true`.
+Command Completions      | `command_completions`     | Object used to generate possible command completions. Defaults to `proc { commands.keys }`.
+Command Prefix           | `command_prefix`          | When present, commands will not be acknowledged unless they are prefixed with the given string. Defaults to `""`.
+CommandSet Object        | `commands`                | The `Pry::CommandSet` responsible for providing commands to the session. Defaults to `Pry::Commands`.
+Completer Object         | `completer`               | The object class that is used to generate possible completions. Defaults to `Pry::InputCompleter`.
+Control-d handler        | `control_d_handler`       | Proc used to handle when `CTRL-d` is pressed. Defaults to `Pry::DEFAULT_CONTROL_D_HANDLER`.
+Disable Auto Reload      | `disable_auto_reload`     | Boolean for turning off auto reloading performed by `edit-method` and related commands. Defaults to `false`.
+Editor                   | `editor`                  | String or Proc determining what editor should be used. Defaults to `ENV["EDITOR"]`.
+Exception Handler        | `exception_handler`       | Proc responsible for handling exceptions raised by user input to the REPL. Defaults to `Pry::DEFAULT_EXCEPTION_HANDLER`.
+Exception White-list     | `exception_whitelist`     | A list of exceptions that Pry should not catch. Defaults to `[SystemExit, SignalException]`.
+Exception Window Size    | `default_window_size`     | How many lines of context should be shown around the line that raised an exception. Defaults to `5`.
+Exec String              | `exec_string`             | A line of code to execute in context before the session. Defaults to `""`.
+Extra Sticky Locals      | `extra_sticky_locals`     | Hash of objects that persist between all bindings in a session. Defaults to `{}`.
+File Completions         | `file_completions`        | Object used to generate possible file name completions. Defaults to `proc { Dir["."] }`.
+Gist Command Config      | `gist`                    | Config for the `gist` command. Defaults to `{ :inspecter => proc(&:pretty_inspect) }`.
+History                  | `history`                 | Configuration object of [history-related configurations][Pry Wiki - Customization and configuration - History].
+Hooks Object             | `hooks`                   | Object tracking the callbacks registered for each hook event. Defaults to `Pry::DEFAULT_HOOKS`.
+Indent Correction        | `correct_indent`          | Boolean determining whether correcting of indenting will occur. Defaults to `true`.
+Input Object             | `input`                   | The object from which Pry retrieves lines of input. Defaults to `Readline`.
+Input Stack              | `input_stack`             | The object from which Pry retrieves lines of input. Defaults to `Readline`.
+Local RC loading         | `should_load_local_rc`    | Boolean determining whether to load any `.pryrc` file that may exist in the current directory (`./.pryrc`). Defaults to `true`.
+Ls Command Config        | `ls`                      | Config for the `ls` command. Defaults to `Pry::Command::Ls::DEFAULT_OPTIONS`.
+Memory Size              | `memory_size`             | Determines the size of the `_in_` and `_out_` cache. Defaults to `100`.
+Output Object            | `output`                  | The object to which Pry writes its output. Defaults to `$stdout`.
+Pager                    | `pager`                   | Boolean determining whether a pager will be used for long output. Defaults to `true`.
+Plugin Loading           | `should_load_plugins`     | Boolean determining whether plugins should be loaded. Defaults to `true`.
+Print Object             | `print`                   | The object responsible for displaying expression evaluation output. Defaults to `Pry::DEFAULT_PRINT`.
+Prompt                   | `prompt`                  | A Proc or an Array of two Procs that will be used to determine the prompt. [Read more][Pry Wiki - Customization and configuration - The Prompt].
+Prompt Name              | `prompt_name`             | String that prefixes the prompt. Defaults to `pry`.
+Prompt Safe Objects      | `prompt_safe_objects`     | Collection of objects that are safe to display with `#inspect`. Defaults to `[String, Numeric, Symbol, nil, true, false]`.
+Pry Doc Presence         | `has_pry_doc`             | Boolean indicating whether `pry-doc` plugin has been loaded. Defaults to `nil`.
+RC-file Loading          | `should_load_rc`          | Boolean determining whether `.pryrc` files should be load. Defaults to `true`.
+Required Libraries       | `requires`                | Collection of libraries that should be required by Pry. Defaults to `[]`.
+Required Library Loading | `should_load_requires`    | Boolean determining whether required libraries should be loaded. Defaults to `true`.
+System Command           | `system`                  | Proc that defines how Pry should execute system commands. Defaults to `Pry::DEFAULT_SYSTEM`.
+Trap Interrupts          | `should_trap_interrupts`  | Boolean determining whether Pry should take extra effort to trap interrupts. Defaults to `true` on JRuby and `false` on other platforms.
+Windows Console Warning  | `windows_console_warning` | Boolean determining whether Windows users should be warned to use `ansicon`. Defaults to `true`.
 
-Pry.config.prompt_safe_objects
-Pry.config.input_stack
-Pry.config.windows_console_warning
-Pry.config.disable_auto_reload
-Pry.config.collision_warning
-Pry.config.system
-Pry.config.control_d_handler
-Pry.config.exec_string
-Pry.config.requires
-Pry.config.
-Pry.config.ls
-Pry.config.gist
-Pry.config.command_completions
-Pry.config.file_completions
-Pry.config.has_pry_doc
-Pry.config.should_load_requires
-Pry.config.should_load_local_rc
-Pry.config.should_trap_interupts
-Pry.config.extra_sticky_locals
-Pry.config.completer
-
-As you can probably already tell, there's a lot you can do with these
+As you can probably already tell, there's **a lot** you can do with these
 configurations. One of my favorite examples of putting these configurations to
-"good" use comes in the form of a fun little April fools gag involving customizing
-[Pry's print object][Pry Wiki - Customization and configuration - Print Object].
-This custom print object functions similar to Pry's default print object,
-except all output will be reversed!
+"good" use comes in the form of a fun little April fools gag involving
+customizing [Pry's
+print object][Pry Wiki - Customization and configuration - Print Object].
+This custom print object functions similar to Pry's default print object, except
+all output will be reversed!
 
 ```ruby
 Pry.config.print = proc { |out, val| out.puts(val.inspect.reverse) }
@@ -305,13 +306,13 @@ Pry.config.pager = true
 ```
 
 We'll talk more about Pry commands in the next section, but in the meantime,
-here are a couple of simple commands (inspired by the infamous
-[University of Florida Taser incident][University of Florida Taser incident - Wikipedia])
+here are a couple of simple commands (inspired by the infamous [University
+of Florida Taser incident][University of Florida Taser incident - Wikipedia])
 that provide a simple example of how the customization API and Pry commands can
 be used together. The example commands provide a command interface to enable and
 disable Pry's pager functionality. We'll cover other ways of adding commands to
 Pry shortly, however for now you could try these commands by adding them to your
-`.pryrc`.
+`.pryrc` file.
 
 ```ruby
 Pry.commands.block_command(/don't-page-me-bro/, "Disable pager, bro.") do
@@ -324,14 +325,14 @@ end
 ```
 
 That does it for our coverage of Pry's customization API. I definitely encourage
-you to explore Pry's configurations as many of these customizations can be
+you to explore Pry's many configurations as these customizations can be
 pretty handy at times, even if they're not useful for you on a day-to-day basis.
 For now though, we move on to Pry's command system.
 
 ### Commands and the Pry command system
 
 Pry takes great pride in its command system as one of the things that sets it
-apart from other REPLs. And not just because adding new commands to Pry is one
+apart from other REPLs, and not just because adding new commands to Pry is one
 of the easiest ways to add new functionality to Pry. The trick up Pry's sleeve
 is that Pry commands aren't methods like they might seem. Rather, they are
 special strings that are intercepted by Pry before the input buffer is
@@ -401,12 +402,12 @@ to add just a single command via the
 [`Pry::CommandSet#add_command`][Pry::CommandSet#add_command - RubyDoc] method.
 
 Although command sets also provide a rich DSL for defining new commands and
-adding them to the set of commands, as is demonstrated above with
+adding them to the existing set of commands, as is demonstrated above with
 [`Pry::CommandSet#block_command`][Pry::CommandSet#block_command - RubyDoc],
 I personally prefer to follow the pattern that Pry itself uses for all of its
 built-in commands, which is a more traditional inheritance / class-based
-approach that involves subclassing
-[`Pry::ClassCommand`][Pry::ClassCommand - RubyDoc].
+approach that involves subclassing the
+[`Pry::ClassCommand`][Pry::ClassCommand - RubyDoc] class.
 
 Defining each command as its own class reduces coupling and makes testing easier
 and more flexible by removing extra complexity added by the command set.
@@ -419,8 +420,8 @@ We'll look more at `Pry::ClassCommand` and the process of defining a class-style
 command in the next article when it's time to build our custom Pry plugin. For
 now though, let's take a step back and consider another means of working with
 commands that is handy in those situations where the goal is not to add an
-entirely new command, but to modify the behavior of a built-in or otherwise
-existing command.
+entirely new command, but to add behavior around a built-in or otherwise
+existing command: command hooks.
 
 #### Command hooks
 
@@ -502,26 +503,26 @@ read-eval-print loop. Pry has five REPL hooks. In order of when they tend to
 occur they are: `before_session`, `after_read`, `before_eval`, `after_eval`, and
 `after_session`.
 
-The `before_session` hook is called whenever we drop into a new REPL CLI session.
+- The `before_session` hook is called whenever we drop into a new REPL CLI session.
 
-The `after_read` hook is called every time a new line of input is read, whether
-or not that line constitutes a complete expression.
+- The `after_read` hook is called every time a new line of input is read, whether
+  or not that line constitutes a complete expression.
 
-The `before_eval` hook is invoked whenever a complete expression is ready for
-evaluation.
+- The `before_eval` hook is invoked whenever a complete expression is ready for
+  evaluation.
 
-The `after_eval` hook is invoked after each complete expression is evaluated.
+- The `after_eval` hook is invoked after each complete expression is evaluated.
 
-The `after_session` hook is invoked at the end of each REPL CLI session.
+- The `after_session` hook is invoked at the end of each REPL CLI session.
 
 A table summarizing the available hooks, when they are invoked, and what
 arguments are provided to registered callbacks can be found below. That said,
-before we move on, it's worth discussing the distinction between `after_read`
-and `before_eval`. The difference is pretty simple, but can be hard to believe
-until you see it in action. As stated above, `after_read` fires after every
-line of input that is read, while `before_eval` only fires when a complete
-expression is ready for evaluation. Consider for example the following method
-definition:
+before we move on, it's worth discussing the distinction between the
+`after_read` and `before_eval` events. The difference is pretty simple, but can
+be hard to believe until you see it in action. As stated above, `after_read`
+fires after every line of input that is read, while `before_eval` only fires
+when a complete expression is ready for evaluation. Consider for example the
+following method definition:
 
 ```ruby
 def standard_example
@@ -543,6 +544,44 @@ pry> end
 # :after_eval
 ```
 
+#### Hooks in action
+
+To get a better feel for when each hook is invoked, the gif below demonstrates
+when each hook fires in the context of a Pry CLI session. The gif below also
+includes examples of hooks registered via the `before_command` and
+`after_command` command hooks we discussed previously. It's worth noting that
+the pattern of events below should not be relied upon when crafting Pry plugins.
+Plugins like `pry-byebug` that assume control of when Pry is initialized can
+cause variations in this pattern, though the variation is mainly related to when
+and how often the `when_started` hook is fired.
+
+![Pry Hooks in Action][Pry Hooks in Action]
+
+#### Registering hooks
+
+New callbacks can be registered with any of Pry's hook events using the
+`add_hook` method of the `Pry.config.hooks` object (an instance of
+`Pry::Hooks`). For example, a `when_started` callback could be registered like
+so:
+
+```ruby
+Pry.config.hooks.add_hook(:when_started, "my_hook") do |target, options, pry|
+  puts "Hello, World!"
+end
+```
+
+Beyond just registering callbacks, the [`Pry::Hooks`][Pry::Hooks - RubyDoc]
+class supports a much fuller API for interrogating, manipulating, and defining
+hooks. This last point is worth making special note of since the use of custom
+hooks allows Pry plugins to expose their own event hooks for other plugins to
+integrate with. For example, the `pry-remote` influenced,
+[`pry-bot`][pry-bot - GitHub] plugin exposes an `after_print` event for other
+plugins to integrate with. For more information on working with the `Pry::Hooks`
+API, check out the docs which have pretty solid coverage of the subject:
+[`Pry::Hooks`][Pry::Hooks - RubyDoc].
+
+#### Pry's built-in Hooks
+
 Hook             | Family     | When invoked                             | Arguments
 ---------------- | ---------- | ---------------------------------------- | -----------
 `when_started`   | life-cycle | After `Pry#initialize`                   | The target object, the options Hash, and the new Pry instance
@@ -552,47 +591,17 @@ Hook             | Family     | When invoked                             | Argum
 `after_eval`     | REPL       | After each input statement is evaluated  | The result of the evaluation and the Pry instance
 `after_session`  | REPL       | After each REPL session                  | The output object, the current binding, and the Pry instance
 
-#### Hooks in action
-
-To get a better feel for when each hook is invoked, the gif below demonstrates
-when each hook fires in the context of a Pry CLI session. The gif below also
-includes examples of hooks registered via the `before_command` and
-`after_command` command hooks we discussed previously.
-
-![Pry Hooks in Action][Pry Hooks in Action]
-
-#### Registering hooks
-
-New callbacks can be registered with any of Pry's hook events using the
-`add_hook` method of 
-
-```ruby
-%i[
-  when_started
-  before_session
-  after_read
-  before_eval
-  after_eval
-  after_session
-].each do |event|
-  Pry.config.hooks.add_hook(event, :"spastic_#{event}") do |out, target, pry|
-    puts(event)
-  end
-end
-Pry.config.commands.before_command("whereami") { |*n| puts "before_whereami#{n && ", #{n.inspect}"}" }
-Pry.config.commands.after_command("whereami") { |*n| puts "after_whereami#{n && ", #{n.inspect}"}" }
-```
-
-
 ## Next Steps
 
-Well, that does it for our coverage of Pry Plugins.
+Well, that does it for our whirlwind tour of Pry plugins.
 
-Stay tuned for the next
-article where we'll apply a lot of what's covered here to create a custom
-greeter plugin for Pry. In the meantime, if you're champing at the bit and want
-to exercise your new Pry plugin prowess, take a look at the list of [Pry Plugin
-Proposals][Pry Wiki - Plugin Proposals] over at the Pry wiki for plugin ideas.
+Stay tuned for the next article where we'll apply a lot of what's covered here
+to create a custom greeter plugin for Pry. In the meantime, if you're champing
+at the bit and want to exercise your new Pry plugin prowess, take a look at the
+list of [Pry Plugin Proposals][Pry Wiki - Plugin Proposals] over at the Pry wiki
+for some ideas of where you might get started.
+
+Thanks for reading and good luck Prying!
 
 ## Additional Resources
 
@@ -601,9 +610,9 @@ Proposals][Pry Wiki - Plugin Proposals] over at the Pry wiki for plugin ideas.
 - [Pry - Available Plugins][Pry Wiki - Available Plugins]
 - [Custom Commands - pry/pry Wiki][Pry Wiki - Custom Commands]
 - [Command System - pry/pry Wiki][Pry Wiki - Command System]
+- [Pry::ClassCommand - rubydoc.info][Pry::ClassCommand - RubyDoc]
 - [Pry::CommandSet - rubydoc.info][Pry::CommandSet - RubyDoc]
-- [PryCommandSetRegistry gem | RubyGems.org][pry-command-set-registry - RubyGems]
-- [tdg5/pry-command-set-registry - Github][pry-command-set-registry - GitHub]
+- [Pry::Hooks - rubydoc.info][Pry::Hooks - RubyDoc]
 
 [CLI - Wikipedia]: https://en.wikipedia.org/wiki/Command-line_interface "Command Line Interface - Wikipedia.org"
 [DRb - Wikibooks]: https://en.wikibooks.org/wiki/Ruby_Programming/Standard_Library/DRb "Distributed Ruby - Wikibooks.org"
@@ -619,12 +628,12 @@ Proposals][Pry Wiki - Plugin Proposals] over at the Pry wiki for plugin ideas.
 [Pry Wiki - Available Plugins]: https://github.com/pry/pry/wiki/Available-plugins "Pry Wiki - Available Plugins"
 [Pry Wiki - Command System]: https://github.com/pry/pry/wiki/Command-system "Pry Wiki - Command System"
 [Pry Wiki - Custom Commands]: https://github.com/pry/pry/wiki/Custom-commands "Pry Wiki - Custom Commands"
-[Pry Wiki - Customization and configuration - History]: https://github.com/pry/pry/wiki/Customization-and-configuration#history
-[Pry Wiki - Customization and configuration - Pager]: https://github.com/pry/pry/wiki/Customization-and-configuration#Config_pager
-[Pry Wiki - Customization and configuration - Per-instance customization]: https://github.com/pry/pry/wiki/Customization-and-configuration#per-instance-customization
-[Pry Wiki - Customization and configuration - Print Object]: https://github.com/pry/pry/wiki/Customization-and-configuration#Config_print
-[Pry Wiki - Customization and configuration - The Prompt]: https://github.com/pry/pry/wiki/Customization-and-configuration#the-prompt
-[Pry Wiki - Customization and configuration]: https://github.com/pry/pry/wiki/Customization-and-configuration
+[Pry Wiki - Customization and configuration - History]: https://github.com/pry/pry/wiki/Customization-and-configuration#history "Pry Wiki - Customization and configuration - History"
+[Pry Wiki - Customization and configuration - Pager]: https://github.com/pry/pry/wiki/Customization-and-configuration#Config_pager "Pry Wiki - Customization and configuration - Pager"
+[Pry Wiki - Customization and configuration - Per-instance customization]: https://github.com/pry/pry/wiki/Customization-and-configuration#per-instance-customization "Pry Wiki - Customization and configuration - Per-instance customization"
+[Pry Wiki - Customization and configuration - Print Object]: https://github.com/pry/pry/wiki/Customization-and-configuration#Config_print "Pry Wiki - Customization and configuration - Print Object"
+[Pry Wiki - Customization and configuration - The Prompt]: https://github.com/pry/pry/wiki/Customization-and-configuration#the-prompt "Pry Wiki - Customization and configuration - The Prompt"
+[Pry Wiki - Customization and configuration]: https://github.com/pry/pry/wiki/Customization-and-configuration "Pry Wiki - Customization and configuration"
 [Pry Wiki - Plugin Proposals]: https://github.com/pry/pry/wiki/Plugin-Proposals "Pry Wiki - Plugin Proposals"
 [Pry Wiki - Plugins - What is a Plugin?]: https://github.com/pry/pry/wiki/Plugins#what-is-a-plugin "Pry Wiki - Plugins - What is a Plugin?"
 [Pry::ClassCommand - RubyDoc]: http://www.rubydoc.info/github/pry/pry/Pry/ClassCommand "Pry::ClassCommand - RubyDoc.info"
@@ -634,15 +643,15 @@ Proposals][Pry Wiki - Plugin Proposals] over at the Pry wiki for plugin ideas.
 [Pry::CommandSet#before_command]: http://www.rubydoc.info/github/pry/pry/Pry/CommandSet#before_command-instance_method "Pry::CommandSet#before_command - RubyDoc.info"
 [Pry::CommandSet#block_command - RubyDoc]: http://www.rubydoc.info/github/pry/pry/Pry/CommandSet#block_command-instance_method "Pry::CommandSet#block_command - RubyDoc.info"
 [Pry::CommandSet#import - RubyDoc]: http://www.rubydoc.info/github/pry/pry/Pry/CommandSet#import-instance_method "Pry::CommandSet#import - RubyDoc.info"
+[Pry::Hooks - RubyDoc]: http://www.rubydoc.info/github/pry/pry/Pry/Hooks "Pry::Hooks - RubyDoc.info"
 [REPL - Wikipedia]: https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop "Read-eval-print Loop - Wikipedia.org"
 [Riker meme]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/04124355/riker.jpg "Command Riker says: Set beard to maximum stun."
-[University of Florida Taser incident - Wikipedia]: https://en.wikipedia.org/wiki/University_of_Florida_Taser_incident
+[University of Florida Taser incident - Wikipedia]: https://en.wikipedia.org/wiki/University_of_Florida_Taser_incident "University of Florida Taser Incident - Wikipedia"
 [William Riker - Wikipedia]: https://en.wikipedia.org/wiki/William_Riker "William Riker - Wikipedia.org"
 [pry - GitHub]: https://github.com/pry/pry "pry/pry - GitHub.com"
+[pry-bot - GitHub]: https://github.com/jasonLaster/pry-bot "jasonLaster/pry-bot - GitHub.com"
 [pry-byebug - GitHub]: https://github.com/deivid-rodriguez/pry-byebug "deivid-rodriguez/pry-byebug - GitHub.com"
 [pry-byebug - RubyGems]: https://rubygems.org/gems/pry-byebug "pry-byebug | RubyGems.org"
-[pry-command-set-registry - GitHub]: https://github.com/tdg5/pry-command-set-registry "tdg5/pry-command-set-registry - GitHub.com"
-[pry-command-set-registry - RubyGems]: https://rubygems.org/gems/pry-command-set-registry "pry-command-set-registry | RubyGems.org"
 [pry-coolline - GitHub]: https://github.com/pry/pry-coolline "pry/pry-coolline - GitHub.com"
 [pry-coolline - RubyGems]: https://rubygems.org/gems/pry-coolline "pry-coolline | RubyGems.org"
 [pry-debugger - GitHub]: https://github.com/nixme/pry-debugger "nixme/pry-debugger - GitHub.com"
