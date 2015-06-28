@@ -82,7 +82,9 @@ constitutes a Pry plugin. First, here's what the
 I think this definition does a fair job of describing the situation, but I have
 two gripes with this definition. First, this definition is out-dated and makes
 no reference to the various hooks built into Pry for customizing behavior. More
-on that later.
+on that later. **Note:** Since the original publication of this article I have
+[updated the Pry Wiki's definition to reference Pry's Hooks
+API][Pry Wiki - Add reference to Hooks API]. OSS FTW!
 
 Second, though it is convenient that Pry will automatically load plugins that
 have a `pry-` prefix, there is nothing preventing a gem without such a prefix
@@ -252,7 +254,7 @@ Extra Sticky Locals      | `extra_sticky_locals`     | Hash of objects that pers
 File Completions         | `file_completions`        | Object used to generate possible file name completions. Defaults to `proc { Dir["."] }`.
 Gist Command Config      | `gist`                    | Config for the `gist` command. Defaults to `{ :inspecter => proc(&:pretty_inspect) }`.
 History                  | `history`                 | Configuration object of [history-related configurations][Pry Wiki - Customization and configuration - History].
-Hooks Object             | `hooks`                   | Object tracking the callbacks registered for each hook event. Defaults to `Pry::DEFAULT_HOOKS`.
+Hooks Object             | `hooks`                   | Object tracking the hooks registered for each event. Defaults to `Pry::DEFAULT_HOOKS`.
 Indent Correction        | `correct_indent`          | Boolean determining whether correcting of indenting will occur. Defaults to `true`.
 Input Object             | `input`                   | The object from which Pry retrieves lines of input. Defaults to `Readline`.
 Input Stack              | `input_stack`             | The object from which Pry retrieves lines of input. Defaults to `Readline`.
@@ -425,6 +427,9 @@ existing command: command hooks.
 
 #### Command hooks
 
+Before we talk about command hooks, please note that **command hooks are
+deprecated** in favor of Pry's hooks API which we'll talk about next.
+
 To facilitate customization and extension of existing or previously defined
 commands, Pry includes a couple of methods on each `Pry::CommandSet` instance
 that allow for registering hooks that fire before or after the matching command.
@@ -462,61 +467,63 @@ any arguments given to the command invocation.
 
 Though these hooks may seem of limited use, there are definitely situations
 where they can be enormously useful, for example, in scenarios where
-observer-like behavior is desirable. Command hooks also make for a great
-introduction to Pry's other, more powerful hook API which we cover next.
+observer-like behavior is desirable. That said, because of their some what
+awkward interface, command hooks are deprecated in favor of Pry's more powerful
+hooks API which we cover next.
 
 ### Hooks API
 
-As another means of integrating with Pry, Pry offers a number of hooks that can
-be used to register behavior after each Pry instance is initialized or at
-various points in the Pry read-eval-print loop. These hooks follow more of an
+As another means of integrating with Pry, Pry offers a number of events that can
+be hooked into to register behavior after each Pry instance is initialized or at
+various points in the Pry read-eval-print loop. These event hooks follow more of an
 event-driven programming style that should feel familiar to anyone who's spent
 any time with [`event_machine`][EventMachine - RubyGems] or callbacks in
 JavaScript. Though one could certainly argue that Pry commands are also
 event-driven to a certain degree, Pry commands are different in that they're
-more like defining your own hooks that fire when certain input conditions are
-met. Pry's hooks API, on the other hand, offers integration into some of Pry's
-deeper internals and most important events.
+more like defining your own events that fire when certain input conditions are
+met. Pry's [hooks API][Pry Wiki - Hooks], on the other hand, offers integration
+into some of Pry's deeper internals and most important events.
 
-The hooks that make up Pry's hooks API fall into two categories, life-cycle
-hooks and REPL hooks.
+The events that make up Pry's hooks API fall into two categories, life-cycle
+events and REPL events.
 
-#### Life-cycle ~~hooks~~ hook
+#### Life-cycle ~~events~~ event
 
-The `when_started` hook is the only life-cycle hook and it allows arbitrary code
+The `when_started` event is the only life-cycle event and it allows arbitrary code
 to be executed whenever a new Pry instance is initialized. In a sense,
-the `when_started` hook can be thought of as a post-initialization hook allowing
+the `when_started` event can be thought of as a post-initialization hook allowing
 plugins to extend the `Pry#initialize` method with additional logic and behavior.
 
-The arguments given to `when_started` callbacks are: the target of the new Pry
+The arguments given to `when_started` hooks are: the target of the new Pry
 instance (E.g. the `binding` in `binding.pry`); the Hash of options given to the
 Pry instance at initialization; and finally, the new Pry instance.
 
-`when_started` should be used by plugins that are interested in the original
-target object or options to the Pry instance or plugins that wish to take action
-on a Pry instance immediately after initialization.
+`when_started` hooks should be used by plugins that are interested in the
+original target object, plugins that are interested in the options given to the
+Pry instance, or plugins that wish to take action on a Pry instance immediately
+after initialization.
 
-#### REPL hooks
+#### REPL events
 
-As one might expect of a REPL, the majority of Pry's hooks hook into Pry's
-read-eval-print loop. Pry has five REPL hooks. In order of when they tend to
+As one might expect of a REPL, the majority of Pry's events hook into Pry's
+read-eval-print loop. Pry has five REPL events. In order of when they tend to
 occur they are: `before_session`, `after_read`, `before_eval`, `after_eval`, and
 `after_session`.
 
-- The `before_session` hook is called whenever we drop into a new REPL CLI session.
+- The `before_session` event is called whenever we drop into a new REPL CLI session.
 
-- The `after_read` hook is called every time a new line of input is read, whether
+- The `after_read` event is called every time a new line of input is read, whether
   or not that line constitutes a complete expression.
 
-- The `before_eval` hook is invoked whenever a complete expression is ready for
+- The `before_eval` event is invoked whenever a complete expression is ready for
   evaluation.
 
-- The `after_eval` hook is invoked after each complete expression is evaluated.
+- The `after_eval` event is invoked after each complete expression is evaluated.
 
-- The `after_session` hook is invoked at the end of each REPL CLI session.
+- The `after_session` event is invoked at the end of each REPL CLI session.
 
-A table summarizing the available hooks, when they are invoked, and what
-arguments are provided to registered callbacks can be found below. That said,
+A table summarizing the available events, when they are invoked, and what
+arguments are provided to registered hooks can be found below. That said,
 before we move on, it's worth discussing the distinction between the
 `after_read` and `before_eval` events. The difference is pretty simple, but can
 be hard to believe until you see it in action. As stated above, `after_read`
@@ -530,7 +537,7 @@ def standard_example
 end
 ```
 
-If we were to evaluate this method in a Pry session, the `after_read` and
+If we were to evaluate this method in a Pry session, imaginary `after_read` and
 `before_eval` hooks would fire like so:
 
 ```ruby
@@ -546,23 +553,22 @@ pry> end
 
 #### Hooks in action
 
-To get a better feel for when each hook is invoked, the gif below demonstrates
-when each hook fires in the context of a Pry CLI session. The gif below also
+To get a better feel for when each event is fired, the gif below demonstrates
+when each event fires in the context of a Pry CLI session. The gif below also
 includes examples of hooks registered via the `before_command` and
 `after_command` command hooks we discussed previously. It's worth noting that
 the pattern of events below should not be relied upon when crafting Pry plugins.
 Plugins like `pry-byebug` that assume control of when Pry is initialized can
 cause variations in this pattern, though the variation is mainly related to when
-and how often the `when_started` hook is fired.
+and how often the `when_started` event is fired.
 
 ![Pry Hooks in Action][Pry Hooks in Action]
 
 #### Registering hooks
 
-New callbacks can be registered with any of Pry's hook events using the
-`add_hook` method of the `Pry.config.hooks` object (an instance of
-`Pry::Hooks`). For example, a `when_started` callback could be registered like
-so:
+New hooks can be registered with any of Pry's events using the `add_hook` method
+of the `Pry.config.hooks` object (an instance of `Pry::Hooks`). For example, a
+`when_started` hook could be registered like so:
 
 ```ruby
 Pry.config.hooks.add_hook(:when_started, "my_hook") do |target, options, pry|
@@ -572,24 +578,26 @@ end
 
 Beyond just registering callbacks, the [`Pry::Hooks`][Pry::Hooks - RubyDoc]
 class supports a much fuller API for interrogating, manipulating, and defining
-hooks. This last point is worth making special note of since the use of custom
-hooks allows Pry plugins to expose their own event hooks for other plugins to
-integrate with. For example, the `pry-remote` influenced,
-[`pry-bot`][pry-bot - GitHub] plugin exposes an `after_print` event for other
-plugins to integrate with. For more information on working with the `Pry::Hooks`
-API, check out the docs which have pretty solid coverage of the subject:
-[`Pry::Hooks`][Pry::Hooks - RubyDoc].
+hooks and events. This last point is worth making special note of since the use
+of custom events allows Pry plugins to expose their own events for other plugins
+to integrate with. For example, the `pry-remote` influenced, [`pry-bot`][pry-bot
+- GitHub] plugin exposes an `after_print` event for other plugins to integrate
+with.
 
-#### Pry's built-in Hooks
+For more information on working with the hooks API or `Pry::Hooks` class,
+check out the [Pry Wiki's Hooks page][Pry Wiki - Hooks] or the  [`Pry::Hooks`
+docs][Pry::Hooks - RubyDoc].
 
-Hook             | Family     | When invoked                             | Arguments
----------------- | ---------- | ---------------------------------------- | -----------
-`when_started`   | life-cycle | After `Pry#initialize`                   | The target object, the options Hash, and the new Pry instance
-`before_session` | REPL       | Before each REPL session starts          | The output object, the current binding, and the Pry instance
-`after_read`     | REPL       | After each line of input is read         | The input String and the Pry instance
-`before_eval`    | REPL       | Before each input statement is evaluated | The code to be evaluated and the Pry instance
-`after_eval`     | REPL       | After each input statement is evaluated  | The result of the evaluation and the Pry instance
-`after_session`  | REPL       | After each REPL session                  | The output object, the current binding, and the Pry instance
+#### Pry's built-in Events
+
+Event                                                 | Family     | When invoked                             | Arguments
+----------------------------------------------------- | ---------- | ---------------------------------------- | -----------
+[`when_started`][Pry Wiki - Hooks - when_started ]    | life-cycle | After `Pry#initialize`                   | The target object, the options Hash, and the new Pry instance
+[`before_session`][Pry Wiki - Hooks - before_session] | REPL       | Before each REPL session starts          | The output object, the current binding, and the Pry instance
+[`after_read`][Pry Wiki - Hooks - after_read]         | REPL       | After each line of input is read         | The input String and the Pry instance
+[`before_eval`][Pry Wiki - Hooks - before_eval]       | REPL       | Before each input statement is evaluated | The code to be evaluated and the Pry instance
+[`after_eval`][Pry Wiki - Hooks - after_eval]         | REPL       | After each input statement is evaluated  | The result of the evaluation and the Pry instance
+[`after_session`][Pry Wiki - Hooks - after_session]   | REPL       | After each REPL session                  | The output object, the current binding, and the Pry instance
 
 ## Next Steps
 
@@ -610,6 +618,7 @@ Thanks for reading and good luck Prying!
 - [Pry - Available Plugins][Pry Wiki - Available Plugins]
 - [Custom Commands - pry/pry Wiki][Pry Wiki - Custom Commands]
 - [Command System - pry/pry Wiki][Pry Wiki - Command System]
+- [Hooks - pry/pry Wiki][Pry Wiki - Hooks]
 - [Pry::ClassCommand - rubydoc.info][Pry::ClassCommand - RubyDoc]
 - [Pry::CommandSet - rubydoc.info][Pry::CommandSet - RubyDoc]
 - [Pry::Hooks - rubydoc.info][Pry::Hooks - RubyDoc]
@@ -622,9 +631,10 @@ Thanks for reading and good luck Prying!
 [Load all the things meme]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/12124201/load-all-the-things.jpg "Load all the things!"
 [Obi-Wan meme]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/11123401/obi-wan.png "Obi-Wan says: Many of the truths we cling to depend greatly on our own point of view"
 [Philosoraptor meme]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2014/02/05120415/easy_breeezy_beautiful_clever_girl.jpg "Philosoraptor says: Easy, Breezy, Beautiful, Clever Girl"
-[Pry Hooks in Action]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/23132321/pry_hooks.gif "Pry Hooks in Action"
 [Pry - RubyGems]: https://rubygems.org/gems/pry "pry | RubyGems.org"
+[Pry Hooks in Action]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/23132321/pry_hooks.gif "Pry Hooks in Action"
 [Pry Plugins]: https://s3.amazonaws.com/tdg5/blog/wp-content/uploads/2015/06/08104046/pry_plugins.jpg "Pry Plugins"
+[Pry Wiki - Add reference to Hooks API]: https://github.com/pry/pry/wiki/Plugins/_compare/e0505559f4e07ce69df0a42577e9460ca1fbc89e...016600ed8c942a35925ef381df4206a18a18e392 "Add reference to Hooks API"
 [Pry Wiki - Available Plugins]: https://github.com/pry/pry/wiki/Available-plugins "Pry Wiki - Available Plugins"
 [Pry Wiki - Command System]: https://github.com/pry/pry/wiki/Command-system "Pry Wiki - Command System"
 [Pry Wiki - Custom Commands]: https://github.com/pry/pry/wiki/Custom-commands "Pry Wiki - Custom Commands"
@@ -634,6 +644,13 @@ Thanks for reading and good luck Prying!
 [Pry Wiki - Customization and configuration - Print Object]: https://github.com/pry/pry/wiki/Customization-and-configuration#Config_print "Pry Wiki - Customization and configuration - Print Object"
 [Pry Wiki - Customization and configuration - The Prompt]: https://github.com/pry/pry/wiki/Customization-and-configuration#the-prompt "Pry Wiki - Customization and configuration - The Prompt"
 [Pry Wiki - Customization and configuration]: https://github.com/pry/pry/wiki/Customization-and-configuration "Pry Wiki - Customization and configuration"
+[Pry Wiki - Hooks - after_eval]: https://github.com/pry/pry/wiki/Hooks#Hooks_after_eval_hook "Pry Wiki - Hooks - after_eval"
+[Pry Wiki - Hooks - after_read]: https://github.com/pry/pry/wiki/Hooks#Hooks_after_read_hook "Pry Wiki - Hooks -  after_read"
+[Pry Wiki - Hooks - after_session]: https://github.com/pry/pry/wiki/Hooks#Hooks_after_session_hook "Pry Wiki - Hooks - after_session"
+[Pry Wiki - Hooks - before_eval]: https://github.com/pry/pry/wiki/Hooks#Hooks_before_eval_hook "Pry Wiki - Hooks - before_eval"
+[Pry Wiki - Hooks - before_session]: https://github.com/pry/pry/wiki/Hooks#Hooks_before_session_hook "Pry Wiki - Hooks - before_session"
+[Pry Wiki - Hooks - when_started ]: https://github.com/pry/pry/wiki/Hooks#Hooks_when_started_hook "Pry Wiki - Hooks - when_started"
+[Pry Wiki - Hooks]: https://github.com/pry/pry/wiki/Hooks "Pry Wiki - Hooks"
 [Pry Wiki - Plugin Proposals]: https://github.com/pry/pry/wiki/Plugin-Proposals "Pry Wiki - Plugin Proposals"
 [Pry Wiki - Plugins - What is a Plugin?]: https://github.com/pry/pry/wiki/Plugins#what-is-a-plugin "Pry Wiki - Plugins - What is a Plugin?"
 [Pry::ClassCommand - RubyDoc]: http://www.rubydoc.info/github/pry/pry/Pry/ClassCommand "Pry::ClassCommand - RubyDoc.info"
