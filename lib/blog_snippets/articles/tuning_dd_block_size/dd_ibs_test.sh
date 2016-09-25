@@ -4,7 +4,7 @@
 set -e
 
 TEST_FILE=${1:-dd_ibs_testfile}
-[ -e "$TEST_FILE" ]; TEST_FILE_EXISTS=$?
+if [ -e "$TEST_FILE" ]; then TEST_FILE_EXISTS=$?; fi
 TEST_FILE_SIZE=134217728
 
 # Exit if file exists
