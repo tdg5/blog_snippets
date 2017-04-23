@@ -2,8 +2,9 @@ source "https://rubygems.org"
 
 gemspec
 
-gem "redcarpet", :platform => %w[mri]
 gem "pry"
+gem "redcarpet", :platform => %w[mri]
+gem "ruby-wpdb", :git => "https://github.com/tdg5-wordpress/ruby-wpdb.git", :branch => :master
 
 group :test do
   gem "coveralls", :require => false

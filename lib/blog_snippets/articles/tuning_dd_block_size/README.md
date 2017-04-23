@@ -142,24 +142,43 @@ Let's just jump straight into the script:
 ```bash
 #!/bin/bash
 
-TEST_FILE=${1:-dd_obs_testfile}
-TEST_FILE_SIZE=128M
+# Since we're dealing with dd, abort if any errors occur
+set -e
 
-for block_size in 512 1K 2K 4K 8K 16K 32K 64K 128K 256K 512K 1M 2M 4M 8M 16M 32M 64M
+TEST_FILE=${1:-dd_obs_testfile}
+[ -e "$TEST_FILE" ]; TEST_FILE_EXISTS=$?
+TEST_FILE_SIZE=134217728
+
+# Header
+PRINTF_FORMAT="%8s : %s\n"
+printf "$PRINTF_FORMAT" 'block size' 'transfer rate'
+
+# Block sizes of 512b 1K 2K 4K 8K 16K 32K 64K 128K 256K 512K 1M 2M 4M 8M 16M 32M 64M
+for BLOCK_SIZE in 512 1024 2048 4096 8192 16384 32768 65536 131072 262144 524288 1048576 2097152 4194304 8388608 16777216 33554432 67108864
 do
+  # Calculate number of segments required to copy
+  COUNT=$(($TEST_FILE_SIZE / $BLOCK_SIZE))
+
+  if [ $COUNT -le 0 ]; then
+    echo "Block size of $BLOCK_SIZE estimated to require $COUNT blocks, aborting further tests."
+    break
+  fi
+
   # Create a test file with the specified block size
-  dd_result=$(dd if=/dev/zero of=$TEST_FILE iflag=count_bytes bs=$block_size count=$TEST_FILE_SIZE 2>&1 1>/dev/null)
+  DD_RESULT=$(dd if=/dev/zero of=$TEST_FILE bs=$BLOCK_SIZE count=$COUNT 2>&1 1>/dev/null)
 
   # Extract the transfer rate from dd's STDERR output
-  transfer_rate=$(echo $dd_result | \grep --only-matching -E '[0-9.]+ [MGk]?B/s')
+  TRANSFER_RATE=$(echo $DD_RESULT | \grep --only-matching -E '[0-9.]+ ([MGk]?B|bytes)/s(ec)?')
 
-  # Clean up the test file and output result
-  rm $TEST_FILE
-  echo "$block_size: $transfer_rate"
+  # Clean up the test file if we created one
+  [ $TEST_FILE_EXISTS -ne 0 ] && rm $TEST_FILE
+
+  # Output the result
+  printf "$PRINTF_FORMAT" "$BLOCK_SIZE" "$TRANSFER_RATE"
 done
 ```
 
-[View on GitHub](https://github.com/tdg5/blog_snippets/blob/ecd2f5787de53dd2fa576c34caa7b3a6573ddf83/lib/blog_snippets/tuning_dd_block_size/dd_obs_test.sh)
+[View on GitHub](https://github.com/tdg5/blog_snippets/blob/master/lib/blog_snippets/articles/tuning_dd_block_size/dd_obs_test.sh)
 
 As you can see, the script is a pretty basic for-loop that uses dd to create a
 test file of 128MB using a variety of block sizes, from the default of 512
@@ -218,31 +237,46 @@ Here's the script:
 ```bash
 #!/bin/bash
 
+# Since we're dealing with dd, abort if any errors occur
+set -e
+
 TEST_FILE=${1:-dd_ibs_testfile}
-TEST_FILE_SIZE=128M
+[ -e "$TEST_FILE" ]; TEST_FILE_EXISTS=$?
+TEST_FILE_SIZE=134217728
 
 # Exit if file exists
-[ -e $TEST_FILE ] && exit 1
+if [ -e $TEST_FILE ]; then
+  echo "Test file $TEST_FILE exists, aborting."
+  exit 1
+fi
 
 # Create test file
-dd if=/dev/urandom of=$TEST_FILE iflag=count_bytes bs=64K count=$TEST_FILE_SIZE > /dev/null 2>&1
+echo 'Generating test file...'
+BLOCK_SIZE=65536
+COUNT=$(($TEST_FILE_SIZE / $BLOCK_SIZE))
+dd if=/dev/urandom of=$TEST_FILE bs=$BLOCK_SIZE count=$COUNT > /dev/null 2>&1
 
-for block_size in 512 1K 2K 4K 8K 16K 32K 64K 128K 256K 512K 1M 2M 4M 8M 16M 32M 64M
+# Header
+PRINTF_FORMAT="%8s : %s\n"
+printf "$PRINTF_FORMAT" 'block size' 'transfer rate'
+
+# Block sizes of 512b 1K 2K 4K 8K 16K 32K 64K 128K 256K 512K 1M 2M 4M 8M 16M 32M 64M
+for BLOCK_SIZE in 512 1024 2048 4096 8192 16384 32768 65536 131072 262144 524288 1048576 2097152 4194304 8388608 16777216 33554432 67108864
 do
   # Read test file out to /dev/null with specified block size
-  dd_result=$(dd if=$TEST_FILE of=/dev/null iflag=count_bytes bs=$block_size count=$TEST_FILE_SIZE 2>&1 1>/dev/null)
+  DD_RESULT=$(dd if=$TEST_FILE of=/dev/null bs=$BLOCK_SIZE 2>&1 1>/dev/null)
 
   # Extract transfer rate
-  transfer_rate=$(echo $dd_result | \grep --only-matching -E '[0-9.]+ [MGk]?B/s')
+  TRANSFER_RATE=$(echo $DD_RESULT | \grep --only-matching -E '[0-9.]+ ([MGk]?B|bytes)/s(ec)?')
 
-  echo "$block_size: $transfer_rate"
+  printf "$PRINTF_FORMAT" "$BLOCK_SIZE" "$TRANSFER_RATE"
 done
 
-# Clean up
-rm $TEST_FILE
+# Clean up the test file if we created one
+[ $TEST_FILE_EXISTS -ne 0 ] && rm $TEST_FILE
 ```
 
-[View on GitHub](https://github.com/tdg5/blog_snippets/blob/d1d3b532578ee02fca0a7cc389ff3eba94ba4ebf/lib/blog_snippets/tuning_dd_block_size/dd_ibs_test.sh)
+[View on GitHub](https://github.com/tdg5/blog_snippets/blob/master/lib/blog_snippets/articles/tuning_dd_block_size/dd_ibs_test.sh)
 
 Similar to the *dd_obs_test.sh* script, this script will create a default test
 file named *dd_ibs_testfile* but you you can also provide the script with a path

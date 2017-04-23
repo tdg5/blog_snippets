@@ -1,16 +1,31 @@
-require "redcarpet"
+require "English"
 require "json"
+require "redcarpet"
 
 module BlogSnippets
   module Renderers
     class WordpressHTMLRenderer < Redcarpet::Render::HTML
+      UNTARGETED_LINK = /^(?:mailto:|#)/.freeze
       # http://rubular.com/r/apmHqN4joc
       HEADER_MATCHER = /(?<header><h(?<level>[1-6])[^>]+id="(?<id>[^"]+)".*?>.*?<\/h\k<level>>)/.freeze
       INDENTATION_TOKEN = "__WORDPRESS_HTML_RENDERER_INDENTATION__".freeze
       NEW_LINE_TOKEN = "__WORDPRESS_HTML_RENDERER_NEW_LINE__".freeze
 
       def initialize(options = nil)
-        super(options ||= default_options)
+        super(@options = options || default_options)
+      end
+
+      # Can't call super due to C-extension design, so fake it so we can
+      # customize it.
+      def link(link, title, content)
+        element = %Q[<a href="#{link}"]
+        attrs = link_attributes(link)
+        attrs["title"] = title unless title.nil? || title.empty?
+        attrs.each do |attr, value|
+          element.concat(%Q[ #{attr}="#{value}"]) unless attr.nil? || attr.empty?
+        end
+        element.concat(%Q[>#{content}</a>])
+        element
       end
 
       def block_code(code, language_or_attributes)
@@ -41,12 +56,19 @@ module BlogSnippets
 
       def add_header_links!(document)
         document.gsub!(HEADER_MATCHER) do |match|
-          match_data = $~
+          match_data = $LAST_MATCH_INFO
           match[0..-6] +
             %Q|<a href="##{match_data[:id]}"><i class="header-link dashicons dashicons-admin-links"></i></a>| +
             "</h#{match_data[:level]}>"
         end
         document
+      end
+
+      def link_attributes(link)
+        return {} unless attrs = @options[:link_attributes]
+        link_attrs = attrs.dup
+        link_attrs.delete("target") if UNTARGETED_LINK === link
+        link_attrs
       end
 
       def code_attributes(lang_or_attrs)

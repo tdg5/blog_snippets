@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+require "ruby-wpdb"
+require "pry"
+
+db_config = YAML.load(File.read(File.expand_path("../../config/database.yml", __FILE__)))
+WPDB.init(db_config["database_url"], db_config["wp_prefix"])
+
+Pry.start
